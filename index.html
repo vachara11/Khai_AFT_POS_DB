@@ -886,7 +886,7 @@
     }
     function setKitchenWarn(mode) {
       const el = document.getElementById('kitchenWarn'); if (!el) return;
-      const msg = mode === 'legacy' ? '⚠️ Google Apps Script ยังเป็นเวอร์ชันเก่า (ไม่มีระบบครัว) — ใช้โหมดสำรอง ซิงค์ได้เฉพาะเครื่องนี้ กรุณาวาง Code.gs ใหม่แล้ว Deploy > New version'
+      const msg = mode === 'legacy' ? '⚠️ ลิงก์ Apps Script นี้ยังไม่มีระบบครัว (ไม่ซิงค์ข้ามเครื่อง) — ' + kitchenErrMsg
                 : mode === 'error' ? '⚠️ Apps Script ผิดพลาด: ' + kitchenErrMsg
                 : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง ' + kitchenErrMsg : '';
       el.textContent = msg; el.classList.toggle('hidden', !msg);
@@ -989,29 +989,22 @@
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          if (!kitchenLegacy || Date.now() - kitchenLegacyAt > 15000) {
-            const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`, { cache: 'no-store' });
-            const txt = await r.text();
-            let j = null;
-            try { j = JSON.parse(txt); } catch (pe) {}
-            if (j && j.status === 'success' && Array.isArray(j.orders)) {
-              list = j.orders; mode = 'cloud'; kitchenLegacy = false;
-            } else if (j && j.status === 'online' && !j.version) {
-              // ตอบกลับแบบสถานะปกติ แต่ไม่รู้จัก GET_KITCHEN = Deploy ยังเป็นเวอร์ชันเก่าจริง ๆ
-              kitchenLegacy = true; kitchenLegacyAt = Date.now();
-            } else if (j && j.status === 'error') {
-              mode = 'error'; kitchenErrMsg = j.message || 'unknown error';
-            } else {
-              // ได้หน้า HTML (ไม่ใช่ JSON) เช่น ยังไม่ได้อนุญาตสิทธิ์ / Who has access ไม่ใช่ Anyone
-              mode = 'offline'; kitchenErrMsg = 'Apps Script ไม่ได้ตอบเป็น JSON (เช็ก Who has access = Anyone และกด Authorize)';
-            }
+          const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`, { cache: 'no-store' });
+          const txt = await r.text();
+          let j = null;
+          try { j = JSON.parse(txt); } catch (pe) {}
+          const tail = '…' + gasUrl.slice(-14);
+          if (j && j.status === 'success' && Array.isArray(j.orders)) {
+            list = j.orders; mode = 'cloud';
+          } else if (j && j.status === 'error') {
+            mode = 'error'; kitchenErrMsg = (j.message || 'unknown') + ' [' + tail + ']';
+          } else if (j) {
+            // ตอบเป็น JSON แต่ไม่รู้จัก GET_KITCHEN = ลิงก์นี้ชี้ไปที่โค้ดเก่า
+            mode = 'legacy'; kitchenErrMsg = 'ลิงก์ที่ใช้: ' + tail + ' | ตอบกลับ: ' + txt.slice(0, 90);
+          } else {
+            mode = 'offline'; kitchenErrMsg = 'ไม่ได้ตอบเป็น JSON (Who has access ต้องเป็น Anyone + กด Authorize) [' + tail + '] ' + txt.replace(/<[^>]*>/g, ' ').slice(0, 80);
           }
-          if (kitchenLegacy) {
-            const r2 = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`, { cache: 'no-store' });
-            const j2 = await r2.json();
-            if (j2 && j2.status === 'success' && Array.isArray(j2.orders)) { mode = 'legacy'; list = j2.orders.map(legacyToKitchen).filter(Boolean); }
-          }
-        } catch (e) { if (mode !== 'error') { mode = 'offline'; kitchenErrMsg = ''; } }
+        } catch (e) { mode = 'offline'; kitchenErrMsg = 'เรียกลิงก์ไม่ได้: ' + e.message; }
       }
       setKitchenWarn(mode);
       const ids = new Set(list.map(o => o.orderId));
