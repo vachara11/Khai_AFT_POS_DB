@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>POS ร้าน ไข่ (อวท.) V3.5</title>
+  <title>POS น้ำแข็งใส ไส่ไม่ยัง By อวท. V4.0</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -26,18 +26,17 @@
     html, body { height: 100%; }
     body {
       font-family: 'Kanit', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent;
-      height: 100vh; height: 100dvh; /* dvh = ความสูงจริงของมือถือ (ไม่โดนแถบ address bar บัง) */
+      height: 100vh; height: 100dvh;
       overscroll-behavior: none; touch-action: manipulation;
     }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #8B1538; border-radius: 4px; }
     .pos-btn:active { transform: scale(0.96); }
-    input, select { font-size: 16px; } /* กัน iOS ซูมเองเวลาแตะช่องกรอก */
+    input, select { font-size: 16px; }
     @media (min-width: 640px) { input, select { font-size: 14px; } }
     .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
 
-    /* ===== มือถือ/แท็บเล็ตแนวตั้ง: ตะกร้าเป็นลิ้นชักเลื่อนขึ้นจากด้านล่าง ===== */
     #mobileBar { display: none; }
     #cartBackdrop { display: none; }
     @media (max-width: 1023px) {
@@ -67,19 +66,40 @@
 
   <div id="printContainer" class="hidden"></div>
 
+  <!-- ================= จอครัว / เซฟ (?screen=kitchen) ================= -->
+  <div id="kitchenScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col">
+    <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-5 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-fire-burner"></i></div>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-xl font-bold truncate">จอครัว (เซฟ)</h1>
+          <p class="text-[11px] text-gold-400 truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 text-xs">
+        <span class="bg-amber-500 text-maroon-950 font-bold px-2.5 py-1 rounded-full">รอรับ <span id="kPendingCount">0</span></span>
+        <span class="bg-sky-500 text-white font-bold px-2.5 py-1 rounded-full">กำลังทำ <span id="kCookingCount">0</span></span>
+        <button onclick="toggleKitchenSound()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i id="kSoundIcon" class="fa-solid fa-volume-high"></i></button>
+        <button onclick="loadKitchen()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i class="fa-solid fa-arrows-rotate"></i></button>
+        <button onclick="clearAllKitchen()" class="pos-btn bg-rose-600 font-bold px-3 h-9 rounded-lg"><i class="fa-solid fa-broom mr-1"></i><span class="hidden sm:inline">เคลียร์ทั้งหมด</span></button>
+      </div>
+    </div>
+    <div id="kitchenGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 content-start"></div>
+  </div>
+
   <!-- ================= จอลูกค้า (?screen=customer) ================= -->
   <div id="customerScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col overflow-y-auto lg:overflow-hidden">
     <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-6 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shadow-lg shrink-0">
       <div class="flex items-center gap-2.5 min-w-0">
         <div class="w-10 h-10 rounded-2xl bg-gold-500 text-maroon-950 flex items-center justify-center text-xl font-extrabold shadow shrink-0">
-          <i class="fa-solid fa-egg"></i>
+          <i class="fa-solid fa-ice-cream"></i>
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-xl font-bold text-white truncate">ร้าน ไข่ (อวท.)</h1>
+            <h1 class="text-base sm:text-xl font-bold text-white truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h1>
             <span class="bg-emerald-500 text-maroon-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse hidden sm:inline">7-DISPLAY</span>
           </div>
-          <p class="text-[11px] text-gold-400 truncate">ข้าวไข่เจียวทรงเครื่อง • วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</p>
+          <p class="text-[11px] text-gold-400 truncate">น้ำแข็งใสเย็นชื่นใจ • วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</p>
         </div>
       </div>
       <div class="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -94,7 +114,7 @@
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 lg:overflow-hidden p-3 sm:p-4 gap-3 sm:gap-4">
       <div class="lg:col-span-7 bg-white text-slate-800 rounded-3xl shadow-2xl border-2 border-gold-500/60 flex flex-col overflow-hidden min-h-[55vh] lg:min-h-0">
         <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center">
-          <span class="font-bold text-sm sm:text-base"><i class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการอาหารของคุณ</span>
+          <span class="font-bold text-sm sm:text-base"><i class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการของคุณ</span>
           <span class="text-xs bg-maroon-950/60 px-3 py-1 rounded-full text-gold-400">รวม <strong id="custTotalQty">0</strong> รายการ</span>
         </div>
         <div id="custItemList" class="flex-1 overflow-y-auto divide-y divide-slate-200 p-3 space-y-2 bg-slate-50"></div>
@@ -110,10 +130,10 @@
       <div class="lg:col-span-5 bg-gradient-to-b from-maroon-900 to-maroon-950 rounded-3xl shadow-2xl border-2 border-gold-500/60 p-5 flex flex-col items-center justify-center text-center">
         <div id="custRightWelcome" class="space-y-3 max-w-xs">
           <div class="w-20 h-20 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto">
-            <i class="fa-solid fa-utensils text-4xl text-gold-400"></i>
+            <i class="fa-solid fa-ice-cream text-4xl text-gold-400"></i>
           </div>
-          <h2 class="text-xl font-bold text-white">ยินดีต้อนรับสู่ ร้าน ไข่ (อวท.)</h2>
-          <p class="text-xs text-maroon-100">ข้าวไข่เจียวร้อนๆ เลือกท็อปปิ้งได้ตามใจชอบ กรุณาตรวจสอบรายการอาหารบนหน้าจอได้เลยครับ</p>
+          <h2 class="text-xl font-bold text-white">ยินดีต้อนรับสู่ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h2>
+          <p class="text-xs text-maroon-100">น้ำแข็งใสเย็นชื่นใจ เลือกท็อปปิ้งได้ตามใจชอบ กรุณาตรวจสอบรายการบนหน้าจอได้เลยครับ</p>
         </div>
 
         <div id="custRightQrPay" class="hidden w-full flex-col items-center justify-center space-y-3">
@@ -146,9 +166,9 @@
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-gold-500 my-auto">
       <div class="bg-gradient-to-r from-maroon-800 to-maroon-600 p-3 text-center text-white">
         <div class="w-12 h-12 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto mb-1">
-          <i class="fa-solid fa-egg text-xl text-gold-400"></i>
+          <i class="fa-solid fa-ice-cream text-xl text-gold-400"></i>
         </div>
-        <h2 class="text-lg font-bold">ร้าน ไข่ (อวท.) POS V3.5</h2>
+        <h2 class="text-lg font-bold">น้ำแข็งใส ไส่ไม่ยั้ง By อวท. POS</h2>
         <p class="text-xs text-gold-400"></p>
       </div>
       <div class="p-4">
@@ -171,6 +191,7 @@
         <div class="mt-3 flex flex-col gap-1.5 text-center">
           <button onclick="openConfigModal()" class="text-xs text-slate-500 hover:text-maroon-700 underline"><i class="fa-solid fa-gear mr-1"></i>ตั้งค่าลิงก์ Google Apps Script</button>
           <button onclick="switchToCustomerDisplayMode()" class="text-xs text-emerald-700 font-semibold hover:underline"><i class="fa-solid fa-tv mr-1"></i>เปิดเครื่องนี้เป็น "จอฝั่งลูกค้า (7-Display)"</button>
+          <button onclick="switchToKitchenMode()" class="text-xs text-orange-600 font-semibold hover:underline"><i class="fa-solid fa-fire-burner mr-1"></i>เปิดเครื่องนี้เป็น "จอครัว (เซฟ)"</button>
         </div>
       </div>
     </div>
@@ -180,11 +201,11 @@
   <header class="bg-gradient-to-r from-maroon-900 via-maroon-700 to-maroon-800 text-white px-2.5 sm:px-4 py-2 shadow-md flex items-center justify-between gap-2 border-b-2 border-gold-500 shrink-0">
     <div class="flex items-center gap-2 min-w-0">
       <div class="w-9 h-9 rounded-xl bg-gold-500 text-maroon-900 flex items-center justify-center font-extrabold text-lg shadow shrink-0">
-        <i class="fa-solid fa-utensils"></i>
+        <i class="fa-solid fa-ice-cream"></i>
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-1.5">
-          <h1 class="font-bold text-sm sm:text-lg leading-tight truncate">ร้าน ไข่ (อวท.)</h1>
+          <h1 class="font-bold text-sm sm:text-lg leading-tight truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h1>
           <span id="roleBadge" class="bg-gold-500 text-maroon-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">CASHIER</span>
         </div>
         <div class="flex items-center gap-1.5">
@@ -196,6 +217,9 @@
 
     <div class="flex items-center gap-1 sm:gap-1.5 text-xs shrink-0">
       <div class="hidden md:block bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400" id="liveClock">00:00:00</div>
+      <button onclick="openKitchenLink()" class="pos-btn bg-orange-500 hover:bg-orange-400 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอครัว">
+        <i class="fa-solid fa-fire-burner"></i><span class="hidden sm:inline">จอครัว</span>
+      </button>
       <button onclick="openCustomerLinkModal()" class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอลูกค้า">
         <i class="fa-solid fa-tv"></i><span class="hidden sm:inline">จอลูกค้า</span>
       </button>
@@ -220,9 +244,9 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5 shrink-0">
         <div class="flex gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5">
           <button onclick="filterCategory('ALL')" data-cat="ALL" class="cat-btn whitespace-nowrap bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">ทั้งหมด</button>
-          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍳 เลือกท็อปปิ้ง</button>
-          <button onclick="filterCategory('SET')" data-cat="SET" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍛 เมนูฮิตขายดี</button>
-          <button onclick="filterCategory('DRINK')" data-cat="DRINK" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤 เครื่องดื่ม/ซุป</button>
+          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍧 เลือกท็อปปิ้ง</button>
+          <button onclick="filterCategory('SET')" data-cat="SET" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">⭐ เมนูฮิตขายดี</button>
+          <button onclick="filterCategory('DRINK')" data-cat="DRINK" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤 เครื่องดื่ม</button>
         </div>
         <div class="relative w-full sm:w-52 shrink-0">
           <i class="fa-solid fa-barcode absolute left-3 top-2.5 text-slate-400"></i>
@@ -309,7 +333,7 @@
     <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-maroon-200 flex flex-col max-h-[92vh] max-h-[92dvh]">
       <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
         <div class="min-w-0">
-          <h3 id="modalBaseTitle" class="font-bold text-sm sm:text-base truncate">เลือกท็อปปิ้งข้าวไข่เจียว</h3>
+          <h3 id="modalBaseTitle" class="font-bold text-sm sm:text-base truncate">เลือกท็อปปิ้ง</h3>
           <p class="text-xs text-gold-400">แตะเลือกเครื่องเคียงที่ต้องการเพิ่ม</p>
         </div>
         <button onclick="closeModal('toppingModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
@@ -319,17 +343,17 @@
         <div class="pt-2 border-t">
           <label class="block text-xs font-bold text-slate-500 mb-1.5">ตัวเลือกพิเศษ (ฟรี)</label>
           <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="toggleNote(this, 'กรอบๆ')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🔥 ทอดกรอบๆ</button>
-            <button type="button" onclick="toggleNote(this, 'ไข่ข้นนุ่มๆ')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍳 ไข่ข้นนุ่มๆ</button>
-            <button type="button" onclick="toggleNote(this, 'น้ำมันน้อย')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥗 น้ำมันน้อย</button>
-            <button type="button" onclick="toggleNote(this, 'ใส่พริกสด')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🌶️ ใส่พริกสด</button>
+            <button type="button" onclick="toggleNote(this, 'หวานน้อย')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍬 หวานน้อย</button>
+            <button type="button" onclick="toggleNote(this, 'หวานมาก')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍭 หวานมาก</button>
+            <button type="button" onclick="toggleNote(this, 'เพิ่มนมข้น')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥛 เพิ่มนมข้น</button>
+            <button type="button" onclick="toggleNote(this, 'แยกท็อปปิ้ง')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥣 แยกท็อปปิ้ง</button>
             <button type="button" onclick="toggleNote(this, 'ใส่กล่อง')" class="note-chip px-3 py-1.5 rounded-full text-xs border">📦 ใส่กล่อง</button>
           </div>
         </div>
       </div>
       <div class="p-3 bg-slate-50 border-t flex items-center justify-between shrink-0 safe-bottom">
         <div>
-          <span class="text-xs text-slate-500">ราคาต่อจาน</span>
+          <span class="text-xs text-slate-500">ราคาต่อถ้วย</span>
           <div id="customPricePreview" class="text-2xl font-mono font-bold text-maroon-700">฿25</div>
         </div>
         <button onclick="confirmCustomOmelet()" class="pos-btn bg-maroon-700 text-white font-bold px-5 py-3 rounded-xl shadow flex items-center gap-2 text-sm">
@@ -455,23 +479,23 @@
         <button onclick="closeModal('adminModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="flex border-b bg-slate-100 px-3 pt-2 gap-1.5 shrink-0 overflow-x-auto">
-        <button onclick="switchAdminTab('MENU')" id="admTabMenu" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍛 เมนูอาหาร</button>
+        <button onclick="switchAdminTab('MENU')" id="admTabMenu" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍧 เมนูน้ำแข็งใส</button>
         <button onclick="switchAdminTab('TOPPING')" id="admTabTopping" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">🧀 ท็อปปิ้ง</button>
         <button onclick="switchAdminTab('QR')" id="admTabQr" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">📱 QR รับเงิน</button>
       </div>
       <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
         <div id="adminMenuSection" class="space-y-3">
           <div class="bg-maroon-50/70 border border-maroon-200 p-3 rounded-xl">
-            <h4 id="menuFormTitle" class="font-bold text-xs text-maroon-800 mb-2">➕ เพิ่ม / แก้ไขเมนูอาหาร</h4>
+            <h4 id="menuFormTitle" class="font-bold text-xs text-maroon-800 mb-2">➕ เพิ่ม / แก้ไขเมนู</h4>
             <input type="hidden" id="editMenuIndex" value="-1" />
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
               <input type="text" id="inpMenuCode" placeholder="รหัส เช่น 108" class="px-2.5 py-2 border rounded-lg font-mono" />
-              <input type="text" id="inpMenuName" placeholder="ชื่อเมนูอาหาร" class="col-span-2 px-2.5 py-2 border rounded-lg" />
+              <input type="text" id="inpMenuName" placeholder="ชื่อเมนู" class="col-span-2 px-2.5 py-2 border rounded-lg" />
               <input type="number" inputmode="numeric" id="inpMenuPrice" placeholder="ราคา (บาท)" class="px-2.5 py-2 border rounded-lg font-mono" />
               <select id="inpMenuCat" class="px-2 py-2 border rounded-lg bg-white">
                 <option value="CUSTOM">เลือกท็อปปิ้ง</option>
                 <option value="SET" selected>เมนูฮิตขายดี</option>
-                <option value="DRINK">เครื่องดื่ม/ซุป</option>
+                <option value="DRINK">เครื่องดื่ม</option>
               </select>
               <input type="text" id="inpMenuBadge" placeholder="ป้าย เช่น ขายดี" class="px-2.5 py-2 border rounded-lg" />
             </div>
@@ -499,7 +523,7 @@
         <div id="adminToppingSection" class="hidden space-y-3">
           <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex flex-wrap gap-2 items-end">
             <input type="hidden" id="editToppingIndex" value="-1" />
-            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น หมูกรอบ" class="flex-1 min-w-[150px] px-3 py-2 border rounded-lg text-xs" />
+            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น บัวลอย" class="flex-1 min-w-[150px] px-3 py-2 border rounded-lg text-xs" />
             <input type="number" inputmode="numeric" id="inpToppingPrice" placeholder="ราคาบวกเพิ่ม" class="w-28 px-3 py-2 border rounded-lg text-xs font-mono" />
             <button onclick="saveToppingItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-lg text-xs">บันทึก</button>
             <button onclick="resetToppingForm()" class="px-3 py-2 rounded-lg border bg-white text-xs">ล้าง</button>
@@ -570,30 +594,36 @@
     function getGasUrl() { return (safeGet('AFT_GAS_URL') || DEFAULT_GAS_URL || '').trim(); }
     function getApiKey() { return (safeGet('AFT_GAS_KEY') || DEFAULT_API_KEY).trim(); }
 
-    // ขอให้เบราว์เซอร์เก็บข้อมูลถาวร (กันโดนล้างเองเมื่อพื้นที่เต็ม)
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
     const DEFAULT_MENUS = [
-      { id:'M01', code:'101', name:'ข้าวไข่เจียว 1 ฟอง (เลือกท็อปปิ้ง)', price:25, cat:'CUSTOM', custom:true, badge:'เลือกเครื่องได้' },
-      { id:'M02', code:'102', name:'ข้าวไข่เจียว 2 ฟอง (เลือกท็อปปิ้ง)', price:35, cat:'CUSTOM', custom:true, badge:'อิ่มคุ้มขายดี' },
-      { id:'M03', code:'103', name:'ข้าวไข่ข้นกุ้งชีสทะลัก', price:55, cat:'SET', custom:false, badge:'Signature' },
-      { id:'M04', code:'104', name:'ข้าวไข่เจียวหมูสับ + พริกสด', price:40, cat:'SET', custom:false, badge:'ยอดฮิต' },
-      { id:'M05', code:'105', name:'ข้าวไข่เจียวแฮม + ปูอัด + ชีส', price:50, cat:'SET', custom:false, badge:'ขวัญใจวัยรุ่น' },
-      { id:'M06', code:'106', name:'ข้าวไข่เจียวต้มยำไก่สับ', price:45, cat:'SET', custom:false, badge:'แซ่บซี้ด' },
-      { id:'M07', code:'107', name:'ข้าวไข่เจียวแหนมทรงเครื่อง', price:45, cat:'SET', custom:false, badge:'แนะนำ' },
-      { id:'M08', code:'201', name:'เพิ่มข้าวสวยหอมมะลิ', price:10, cat:'SET', custom:false, badge:'Add-on' },
+      { id:'M01', code:'101', name:'น้ำแข็งใส ถ้วยเล็ก (เลือกท็อปปิ้ง)', price:20, cat:'CUSTOM', custom:true, badge:'เลือกท็อปได้' },
+      { id:'M02', code:'102', name:'น้ำแข็งใส ถ้วยใหญ่ (เลือกท็อปปิ้ง)', price:30, cat:'CUSTOM', custom:true, badge:'จุใจขายดี' },
+      { id:'M03', code:'103', name:'น้ำแข็งใสรวมมิตรจัดเต็ม', price:40, cat:'SET', custom:false, badge:'Signature' },
+      { id:'M04', code:'104', name:'น้ำแข็งใสนมชมพู + ขนมปังกรอบ', price:30, cat:'SET', custom:false, badge:'ยอดฮิต' },
+      { id:'M05', code:'105', name:'น้ำแข็งใสบัวลอยไข่หวาน', price:35, cat:'SET', custom:false, badge:'ขวัญใจวัยรุ่น' },
+      { id:'M06', code:'106', name:'น้ำแข็งใสมะม่วงสุก + นมข้น', price:40, cat:'SET', custom:false, badge:'หอมหวาน' },
+      { id:'M07', code:'107', name:'น้ำแข็งใสช็อกโกแลต + มาร์ชแมลโลว์', price:35, cat:'SET', custom:false, badge:'แนะนำ' },
+      { id:'M08', code:'201', name:'เพิ่มท็อปปิ้ง 1 อย่าง', price:5, cat:'SET', custom:false, badge:'Add-on' },
       { id:'D01', code:'301', name:'น้ำอัดลมเย็นเจี๊ยบ (แก้ว)', price:15, cat:'DRINK', custom:false, badge:'เครื่องดื่ม' },
       { id:'D02', code:'302', name:'ชาไทย / ชามะนาว อวท.', price:20, cat:'DRINK', custom:false, badge:'ชงสด' },
       { id:'D03', code:'303', name:'น้ำดื่มคริสตัล (ขวด)', price:10, cat:'DRINK', custom:false, badge:'เครื่องดื่ม' },
-      { id:'D04', code:'304', name:'ต้มจืดเต้าหู้หมูสับร้อนๆ', price:25, cat:'DRINK', custom:false, badge:'ซดคล่องคอ' }
+      { id:'D04', code:'304', name:'ชาเขียวนมเย็น', price:25, cat:'DRINK', custom:false, badge:'ชงสด' }
     ];
 
     const DEFAULT_TOPPINGS = [
-      { name:'หมูสับ', price:10 }, { name:'ไก่สับ', price:10 }, { name:'แฮม', price:10 },
-      { name:'ปูอัด', price:10 }, { name:'ไส้กรอก', price:10 }, { name:'แหนม', price:10 },
-      { name:'หมูยอ', price:10 }, { name:'กุ้งสับ', price:15 }, { name:'มอสซาเรลล่าชีส', price:15 },
-      { name:'ชะอม / โหระพา', price:5 }, { name:'หอมแดง / มะเขือเทศ', price:5 }, { name:'วุ้นเส้น', price:5 }
+      { name:'บัวลอย', price:5 }, { name:'ลูกชิด', price:5 }, { name:'เฉาก๊วย', price:5 },
+      { name:'ถั่วแดง', price:5 }, { name:'ข้าวโพด', price:5 }, { name:'วุ้นมะพร้าว', price:5 },
+      { name:'ขนมปังกรอบ', price:5 }, { name:'เยลลี่', price:5 }, { name:'ฟรุตสลัด', price:10 },
+      { name:'มาร์ชแมลโลว์', price:10 }, { name:'ไอศกรีมกะทิ', price:10 }, { name:'ไข่มุก', price:10 }
     ];
+
+    // เมนูชุดใหม่ (น้ำแข็งใส): ล้างเมนูเก่าที่เคยบันทึกไว้ในเครื่องครั้งเดียว
+    const MENU_VER = 'ice-v1';
+    if (safeGet('AFT_MENU_VER') !== MENU_VER) {
+      try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) {}
+      safeSet('AFT_MENU_VER', MENU_VER);
+    }
 
     let menuItems = JSON.parse(safeGet('AFT_CUSTOM_MENUS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_MENUS));
     let toppingList = JSON.parse(safeGet('AFT_CUSTOM_TOPPINGS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_TOPPINGS));
@@ -606,13 +636,12 @@
     let currentPaymentMethod = 'CASH', cashReceivedAmount = 0, currentReceiptOrder = null;
 
     const posChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('AFT_POS_CUSTOMER_SYNC') : null;
+    const kitchenChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('AFT_KITCHEN_SYNC') : null;
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      // รับลิงก์/คีย์จาก URL แล้วจำถาวรทันที (เปิดครั้งเดียวผ่านลิงก์ที่มี ?gas=... ก็เชื่อมต่อค้างไว้ตลอด)
       if (urlParams.get('gas')) safeSet('AFT_GAS_URL', urlParams.get('gas'));
       if (urlParams.get('key')) safeSet('AFT_GAS_KEY', urlParams.get('key'));
-      // ถ้ามีค่าในเครื่อง/ไฟล์ แต่ URL ยังไม่มี ?gas ให้ฝังลง URL (บุ๊กมาร์กแล้วใช้ได้ทุกครั้ง)
       pinGasToUrl();
 
       updateClock();
@@ -621,6 +650,10 @@
 
       if (urlParams.get('screen') === 'customer') {
         initCustomerDisplayMode();
+        return;
+      }
+      if (urlParams.get('screen') === 'kitchen') {
+        initKitchenMode();
         return;
       }
 
@@ -632,7 +665,6 @@
       broadcastCustomerState('ORDERING');
       syncOrdersFromGoogleSheet(true);
 
-      // ถ้ายังไม่เคยเชื่อมเลย ให้เด้งหน้าตั้งค่าครั้งแรกให้อัตโนมัติ (ทำครั้งเดียว)
       if (!getGasUrl() && !safeGet('AFT_ASKED_CONFIG')) {
         safeSet('AFT_ASKED_CONFIG', '1');
         setTimeout(openConfigModal, 600);
@@ -719,7 +751,7 @@
         cashReceived: extra.cashReceived !== undefined ? extra.cashReceived : cashReceivedAmount,
         changeAmount: extra.changeAmount !== undefined ? extra.changeAmount : Math.max(0, cashReceivedAmount - total),
         qrImage: safeGet('AFT_QR_IMAGE') || '',
-        qrText: safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)'
+        qrText: safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.'
       };
       safeSet('AFT_LIVE_CUSTOMER_STATE', JSON.stringify(displayData));
       if (posChannel) posChannel.postMessage(displayData);
@@ -771,7 +803,7 @@
 
       const listEl = document.getElementById('custItemList');
       if (items.length === 0) {
-        listEl.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-14"><i class="fa-solid fa-bowl-rice text-5xl mb-2 text-slate-300"></i><p class="font-bold">ยินดีต้อนรับครับ</p><p class="text-xs">สั่งข้าวไข่เจียวกับพนักงานได้เลยครับ</p></div>`;
+        listEl.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-14"><i class="fa-solid fa-ice-cream text-5xl mb-2 text-slate-300"></i><p class="font-bold">ยินดีต้อนรับครับ</p><p class="text-xs">สั่งกับพนักงานได้เลยครับ</p></div>`;
       } else {
         listEl.innerHTML = items.map((item, idx) => `
           <div class="p-3 bg-white rounded-2xl shadow-2xs border flex items-center justify-between gap-2">
@@ -800,7 +832,7 @@
         badge.textContent = '📱 กรุณาสแกน QR Code เพื่อชำระเงิน';
         rQr.classList.remove('hidden'); rQr.classList.add('flex');
         document.getElementById('custQrPayAmount').textContent = `฿${totalAmt.toFixed(2)}`;
-        document.getElementById('custQrAccountName').textContent = state.qrText || 'พร้อมเพย์ ร้าน ไข่ (อวท.)';
+        document.getElementById('custQrAccountName').textContent = state.qrText || 'พร้อมเพย์ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.';
         document.getElementById('custQrBox').innerHTML = state.qrImage
           ? `<img src="${state.qrImage}" class="w-full h-full object-contain rounded-lg" />`
           : `<div class="text-maroon-900 flex flex-col items-center"><i class="fa-solid fa-qrcode text-7xl"></i><span class="text-xs text-slate-500 mt-1">QR PromptPay</span></div>`;
@@ -811,8 +843,174 @@
         document.getElementById('custSummaryReceived').textContent = `฿${Number(state.cashReceived || 0).toFixed(2)}`;
         document.getElementById('custSummaryChange').textContent = `฿${Number(state.changeAmount || 0).toFixed(2)}`;
       } else {
-        badge.textContent = items.length ? 'กำลังทวนรายการอาหาร...' : 'พร้อมรับออเดอร์...';
+        badge.textContent = items.length ? 'กำลังทวนรายการ...' : 'พร้อมรับออเดอร์...';
         rWel.classList.remove('hidden');
+      }
+    }
+
+    // ===================== จอครัว (เซฟ) =====================
+    let kitchenOrders = [], kitchenKnown = null, kitchenSound = true, kitchenOverride = {};
+
+    function getLocalKitchen() { try { return JSON.parse(safeGet('AFT_KITCHEN_QUEUE') || '[]'); } catch (e) { return []; } }
+    function saveLocalKitchen(a) { safeSet('AFT_KITCHEN_QUEUE', JSON.stringify(a)); }
+
+    function getKitchenUrl() {
+      const base = window.location.origin + window.location.pathname;
+      const gas = getGasUrl();
+      const p = new URLSearchParams();
+      p.set('screen', 'kitchen');
+      if (gas) p.set('gas', gas);
+      return `${base}?${p.toString()}`;
+    }
+    function switchToKitchenMode() { window.location.href = getKitchenUrl(); }
+    function openKitchenLink() {
+      const url = getKitchenUrl();
+      Swal.fire({
+        title: '🔥 จอครัว (เซฟ)',
+        html: `<p style="font-size:12px;margin-bottom:6px">คัดลอกลิงก์ไปเปิดบนแท็บเล็ต/มือถือของเซฟ</p><input readonly class="swal2-input" style="font-size:11px;margin:0;width:100%" value="${url}">`,
+        showDenyButton: true, showCancelButton: true,
+        confirmButtonText: 'เปิดหน้าต่างใหม่', denyButtonText: 'คัดลอกลิงก์', cancelButtonText: 'ปิด', confirmButtonColor: '#6A0D25'
+      }).then(r => {
+        if (r.isConfirmed) window.open(url, 'KitchenDisplay', 'width=1100,height=700');
+        else if (r.isDenied) {
+          try { navigator.clipboard.writeText(url); } catch (e) {}
+          Swal.fire({ toast:true, position:'top-end', icon:'success', title:'คัดลอกลิงก์จอครัวแล้ว', showConfirmButton:false, timer:1500 });
+        }
+      });
+    }
+
+    // POS เรียกเมื่อบันทึกขึ้นคลาวด์ไม่ได้ (สำรองในเครื่อง)
+    function pushOrderToKitchen(o) {
+      const q = getLocalKitchen();
+      q.push({ orderId:o.orderId, queueNo:o.queueNo, timestamp:o.timestamp, items:o.items, kitchenStatus:'PENDING', createdAt:o.createdAt });
+      saveLocalKitchen(q);
+      if (kitchenChannel) kitchenChannel.postMessage('refresh');
+    }
+
+    function initKitchenMode() {
+      document.getElementById('pinLockModal').classList.add('hidden');
+      showModal('kitchenScreenView');
+      loadKitchen();
+      setInterval(loadKitchen, 3000);
+      setInterval(renderKitchen, 20000);
+      if (kitchenChannel) kitchenChannel.onmessage = () => loadKitchen();
+      window.addEventListener('storage', ev => { if (ev.key === 'AFT_KITCHEN_QUEUE') loadKitchen(); });
+    }
+
+    function applyKitchenOverrides(list) {
+      const now = Date.now();
+      return list.filter(o => {
+        const ov = kitchenOverride[o.orderId];
+        if (!ov || now - ov.ts > 8000) return true;
+        if (ov.status === 'DONE') return false;
+        o.kitchenStatus = ov.status;
+        return true;
+      });
+    }
+
+    async function loadKitchen() {
+      let list = [];
+      const gasUrl = getGasUrl();
+      if (gasUrl) {
+        try {
+          const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`);
+          const j = await r.json();
+          if (j && j.status === 'success' && Array.isArray(j.orders)) list = j.orders;
+        } catch (e) {}
+      }
+      const ids = new Set(list.map(o => o.orderId));
+      getLocalKitchen().forEach(o => { if (!ids.has(o.orderId)) list.push(o); });
+      list = applyKitchenOverrides(list);
+      list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      if (kitchenKnown && list.some(o => !kitchenKnown.has(o.orderId) && o.kitchenStatus === 'PENDING')) {
+        if (kitchenSound) { playBeep(988, 150); setTimeout(() => playBeep(1318, 250), 200); }
+      }
+      kitchenKnown = new Set(list.map(o => o.orderId));
+      kitchenOrders = list;
+      renderKitchen();
+    }
+
+    function toggleKitchenSound() {
+      kitchenSound = !kitchenSound;
+      document.getElementById('kSoundIcon').className = kitchenSound ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+      if (kitchenSound) playBeep(880, 80);
+    }
+
+    function renderKitchen() {
+      const list = kitchenOrders;
+      const pending = list.filter(o => o.kitchenStatus === 'PENDING').length;
+      document.getElementById('kPendingCount').textContent = pending;
+      document.getElementById('kCookingCount').textContent = list.length - pending;
+      const grid = document.getElementById('kitchenGrid');
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-maroon-200 py-24"><i class="fa-solid fa-circle-check text-6xl text-emerald-400 mb-3"></i><p class="text-xl font-bold">ไม่มีออเดอร์ค้าง</p><p class="text-sm">ออเดอร์ใหม่จะเด้งขึ้นที่นี่อัตโนมัติ</p></div>`;
+        return;
+      }
+      grid.innerHTML = list.map(o => {
+        const isNew = o.kitchenStatus === 'PENDING';
+        const mins = o.createdAt ? Math.floor((Date.now() - o.createdAt) / 60000) : null;
+        const late = mins !== null && mins >= 10;
+        const head = late ? 'bg-rose-600 text-white' : (isNew ? 'bg-amber-500 text-maroon-950' : 'bg-sky-600 text-white');
+        const border = late ? 'border-rose-500' : (isNew ? 'border-amber-400' : 'border-sky-500');
+        const items = (o.items || []).map(i => `
+          <div class="py-2 flex justify-between gap-2">
+            <div class="min-w-0">
+              <div class="font-bold text-base leading-snug">${i.name}</div>
+              ${i.toppings && i.toppings.length ? `<div class="text-sm text-maroon-700 font-semibold">+ ${i.toppings.join(', ')}</div>` : ''}
+            </div>
+            <span class="font-mono font-extrabold text-2xl text-maroon-800 shrink-0">x${i.qty}</span>
+          </div>`).join('');
+        const btn = isNew
+          ? `<button onclick="setKitchenStatus('${o.orderId}','COOKING')" class="pos-btn w-full bg-sky-600 text-white font-bold py-3 text-base"><i class="fa-solid fa-hand-point-up mr-1.5"></i>รับออเดอร์</button>`
+          : `<button onclick="setKitchenStatus('${o.orderId}','DONE')" class="pos-btn w-full bg-emerald-600 text-white font-bold py-3 text-base"><i class="fa-solid fa-circle-check mr-1.5"></i>เคลียร์ออเดอร์ (เสร็จแล้ว)</button>`;
+        return `
+          <div class="rounded-2xl overflow-hidden shadow-xl border-4 ${border} bg-white text-slate-800 flex flex-col ${isNew ? 'animate-pulse' : ''}">
+            <div class="${head} px-3 py-2 flex items-center justify-between">
+              <span class="font-mono font-extrabold text-3xl leading-none">${o.queueNo}</span>
+              <div class="text-right text-xs font-bold">
+                <div>${isNew ? '🆕 ออเดอร์ใหม่' : '🔥 กำลังทำ'}</div>
+                ${mins !== null ? `<div>รอมา ${mins} นาที</div>` : ''}
+              </div>
+            </div>
+            <div class="px-3 divide-y divide-slate-200 flex-1">${items}</div>
+            <div class="text-[10px] text-slate-400 px-3 py-1 font-mono">${o.orderId} • ${o.timestamp || ''}</div>
+            ${btn}
+          </div>`;
+      }).join('');
+    }
+
+    async function setKitchenStatus(id, status) {
+      playBeep(status === 'DONE' ? 980 : 700, 80);
+      kitchenOverride[id] = { status, ts: Date.now() };
+      let q = getLocalKitchen();
+      if (status === 'DONE') q = q.filter(o => o.orderId !== id);
+      else q.forEach(o => { if (o.orderId === id) o.kitchenStatus = status; });
+      saveLocalKitchen(q);
+      kitchenOrders = applyKitchenOverrides(kitchenOrders);
+      renderKitchen();
+      const gasUrl = getGasUrl();
+      if (gasUrl) {
+        try {
+          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action:'SET_KITCHEN_STATUS', apiKey:getApiKey(), orderId:id, status }) });
+        } catch (e) {}
+      }
+    }
+
+    async function clearAllKitchen() {
+      if (!kitchenOrders.length) return;
+      const c = await Swal.fire({ title:'เคลียร์ออเดอร์ทั้งหมด?', text:`มี ${kitchenOrders.length} ออเดอร์ค้างอยู่ (ประวัติการขายยังอยู่ครบ)`, icon:'warning',
+        showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'เคลียร์ทั้งหมด', cancelButtonText:'ยกเลิก' });
+      if (!c.isConfirmed) return;
+      kitchenOrders.forEach(o => { kitchenOverride[o.orderId] = { status:'DONE', ts:Date.now() }; });
+      saveLocalKitchen([]);
+      kitchenOrders = []; renderKitchen();
+      const gasUrl = getGasUrl();
+      if (gasUrl) {
+        try {
+          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action:'CLEAR_KITCHEN_ALL', apiKey:getApiKey() }) });
+        } catch (e) {}
       }
     }
 
@@ -936,7 +1134,7 @@
           <div class="flex-1 min-w-0">
             <div class="font-bold text-slate-800 text-xs sm:text-sm truncate">${idx + 1}. ${item.name}</div>
             ${item.toppings && item.toppings.length ? `<div class="text-[11px] text-maroon-700 break-words">+ ${item.toppings.join(', ')}</div>` : ''}
-            <div class="text-[11px] text-slate-400 font-mono">฿${item.unitPrice}/จาน</div>
+            <div class="text-[11px] text-slate-400 font-mono">฿${item.unitPrice}/ถ้วย</div>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             <button onclick="adjustQty(${idx}, -1)" class="w-8 h-8 rounded bg-slate-100 font-bold text-sm">-</button>
@@ -964,7 +1162,7 @@
 
     // --- Payment & Checkout ---
     function openPaymentModal(method) {
-      if (!cart.length) return Swal.fire({ toast:true, position:'top', icon:'warning', title:'กรุณาเลือกเมนูอาหารก่อนคิดเงิน', showConfirmButton:false, timer:1500 });
+      if (!cart.length) return Swal.fire({ toast:true, position:'top', icon:'warning', title:'กรุณาเลือกเมนูก่อนคิดเงิน', showConfirmButton:false, timer:1500 });
       const total = getCartTotal();
       cashReceivedAmount = total;
       document.getElementById('payModalTotal').textContent = `฿${total}`;
@@ -1017,7 +1215,8 @@
         cashReceived: cashReceivedAmount,
         changeAmount: cashReceivedAmount - total,
         items: JSON.parse(JSON.stringify(cart)),
-        timestamp: new Date().toLocaleString('th-TH')
+        timestamp: new Date().toLocaleString('th-TH'),
+        createdAt: Date.now()
       };
 
       const btn = document.getElementById('confirmCheckoutBtn');
@@ -1048,6 +1247,8 @@
       const localOrders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       localOrders.unshift(orderData);
       safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
+      // ส่งเข้าจอครัว (ถ้าขึ้นคลาวด์ไม่ได้ ใช้คิวในเครื่องแทน)
+      if (!savedToCloud) pushOrderToKitchen(orderData);
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึก';
@@ -1064,7 +1265,7 @@
       if (!gasUrl) {
         Swal.fire({ toast:true, position:'bottom-end', icon:'warning', title:'บันทึกเฉพาะในเครื่อง (ยังไม่ได้ตั้งลิงก์ Google Sheets)', showConfirmButton:false, timer:3000 });
       } else if (savedToCloud) {
-        Swal.fire({ toast:true, position:'bottom-end', icon:'success', title:'บันทึกลง Google Sheets สำเร็จ!', showConfirmButton:false, timer:2000 });
+        Swal.fire({ toast:true, position:'bottom-end', icon:'success', title:'บันทึกลง Google Sheets สำเร็จ! ส่งเข้าครัวแล้ว', showConfirmButton:false, timer:2000 });
       }
 
       setTimeout(() => { if (!cart.length) broadcastCustomerState('ORDERING'); }, 5000);
@@ -1083,8 +1284,8 @@
 
       return `
         <div style="text-align:center;border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:6px;">
-          <div style="font-size:15px;font-weight:bold;">ร้าน ไข่ (อวท.)</div>
-          <div style="font-size:10px;">ข้าวไข่เจียวทรงเครื่อง วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</div>
+          <div style="font-size:15px;font-weight:bold;">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</div>
+          <div style="font-size:10px;">วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</div>
           <div style="margin-top:4px;font-size:13px;font-weight:bold;">คิวที่: ${order.queueNo}</div>
           <div style="font-size:10px;">บิล: ${order.orderId} | ${order.timestamp}</div>
         </div>
@@ -1168,7 +1369,7 @@
       });
       if (!confirm.isConfirmed) return;
 
-      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); } catch (e) {}
+      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); localStorage.removeItem('AFT_KITCHEN_QUEUE'); } catch (e) {}
       queueCounter = 1;
       safeSet('AFT_QUEUE_NO', '1');
       updateQueueBadge();
@@ -1234,7 +1435,7 @@
       });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
-      a.download = `ยอดขาย_ร้านไข่_อวท.csv`;
+      a.download = `ยอดขาย_น้ำแข็งใส_ไส่ไม่ยั้ง_อวท.csv`;
       a.click();
     }
 
@@ -1354,7 +1555,7 @@
     function clearQrImage() { try { localStorage.removeItem('AFT_QR_IMAGE'); } catch (e) {} renderQrDisplay(); broadcastCustomerState('ORDERING'); }
     function renderQrDisplay() {
       const img = safeGet('AFT_QR_IMAGE');
-      const txt = safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)';
+      const txt = safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.';
       document.getElementById('inpQrAccountText').value = txt;
       const html = img ? `<img src="${img}" class="w-full h-full object-contain rounded" />` : `<i class="fa-solid fa-qrcode text-6xl text-maroon-900"></i>`;
       document.getElementById('qrImageContainer').innerHTML = html;
