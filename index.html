@@ -887,7 +887,8 @@
     function setKitchenWarn(mode) {
       const el = document.getElementById('kitchenWarn'); if (!el) return;
       const msg = mode === 'legacy' ? '⚠️ Google Apps Script ยังเป็นเวอร์ชันเก่า (ไม่มีระบบครัว) — ใช้โหมดสำรอง ซิงค์ได้เฉพาะเครื่องนี้ กรุณาวาง Code.gs ใหม่แล้ว Deploy > New version'
-                : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง' : '';
+                : mode === 'error' ? '⚠️ Apps Script ผิดพลาด: ' + kitchenErrMsg
+                : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง ' + kitchenErrMsg : '';
       el.textContent = msg; el.classList.toggle('hidden', !msg);
     }
 
@@ -957,7 +958,8 @@
       document.getElementById('pinLockModal').classList.add('hidden');
       showModal('kitchenScreenView');
       loadKitchen();
-      setInterval(loadKitchen, 3000);
+      setInterval(loadKitchen, 2000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) loadKitchen(); });
       setInterval(renderKitchen, 20000);
       if (kitchenChannel) kitchenChannel.onmessage = () => loadKitchen();
       window.addEventListener('storage', ev => { if (ev.key === 'AFT_KITCHEN_QUEUE') loadKitchen(); });
@@ -974,24 +976,42 @@
       });
     }
 
-    let kitchenLegacy = false, kitchenLegacyAt = 0;
+    let kitchenLegacy = false, kitchenLegacyAt = 0, kitchenBusy = false, kitchenErrMsg = '';
     async function loadKitchen() {
+      if (kitchenBusy) return;           // กันยิงซ้อน (Apps Script ตอบช้า 1-2 วินาที)
+      kitchenBusy = true;
+      try {
+        await loadKitchenInner();
+      } finally { kitchenBusy = false; }
+    }
+    async function loadKitchenInner() {
       let list = [], mode = 'local';
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          if (!kitchenLegacy || Date.now() - kitchenLegacyAt > 30000) {
-            const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`);
-            const j = await r.json();
-            if (j && j.status === 'success' && Array.isArray(j.orders)) { list = j.orders; mode = 'cloud'; kitchenLegacy = false; }
-            else { kitchenLegacy = true; kitchenLegacyAt = Date.now(); }
+          if (!kitchenLegacy || Date.now() - kitchenLegacyAt > 15000) {
+            const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`, { cache: 'no-store' });
+            const txt = await r.text();
+            let j = null;
+            try { j = JSON.parse(txt); } catch (pe) {}
+            if (j && j.status === 'success' && Array.isArray(j.orders)) {
+              list = j.orders; mode = 'cloud'; kitchenLegacy = false;
+            } else if (j && j.status === 'online' && !j.version) {
+              // ตอบกลับแบบสถานะปกติ แต่ไม่รู้จัก GET_KITCHEN = Deploy ยังเป็นเวอร์ชันเก่าจริง ๆ
+              kitchenLegacy = true; kitchenLegacyAt = Date.now();
+            } else if (j && j.status === 'error') {
+              mode = 'error'; kitchenErrMsg = j.message || 'unknown error';
+            } else {
+              // ได้หน้า HTML (ไม่ใช่ JSON) เช่น ยังไม่ได้อนุญาตสิทธิ์ / Who has access ไม่ใช่ Anyone
+              mode = 'offline'; kitchenErrMsg = 'Apps Script ไม่ได้ตอบเป็น JSON (เช็ก Who has access = Anyone และกด Authorize)';
+            }
           }
           if (kitchenLegacy) {
-            const r2 = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`);
+            const r2 = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`, { cache: 'no-store' });
             const j2 = await r2.json();
             if (j2 && j2.status === 'success' && Array.isArray(j2.orders)) { mode = 'legacy'; list = j2.orders.map(legacyToKitchen).filter(Boolean); }
           }
-        } catch (e) { mode = 'offline'; }
+        } catch (e) { if (mode !== 'error') { mode = 'offline'; kitchenErrMsg = ''; } }
       }
       setKitchenWarn(mode);
       const ids = new Set(list.map(o => o.orderId));
@@ -1329,6 +1349,7 @@
       safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
       // ส่งเข้าจอครัว (ถ้าขึ้นคลาวด์ไม่ได้ ใช้คิวในเครื่องแทน)
       if (!savedToCloud) pushOrderToKitchen(orderData);
+      else if (kitchenChannel) kitchenChannel.postMessage('refresh');   // จอครัวเครื่องเดียวกันเด้งทันที
       renderHistoryTable();
 
       btn.disabled = false;
@@ -1684,6 +1705,13 @@
       pinGasToUrl();
       updateDbBadge();
       closeModal('configModal');
+      if (url) {
+        try {
+          const t = await (await fetch(`${url}?action=GET_KITCHEN&t=${Date.now()}`, { cache:'no-store' })).json();
+          if (t && t.status === 'success') Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ระบบครัวพร้อมใช้งาน (v' + (t.version || '?') + ')', showConfirmButton:false, timer:2500 });
+          else Swal.fire({ icon:'warning', title:'Apps Script ยังไม่มีระบบครัว', text:'ลิงก์นี้ยังเป็นเวอร์ชันเก่า: วาง Code.gs ใหม่ แล้ว Deploy > Manage deployments > แก้ไข > New version', confirmButtonColor:'#6A0D25' });
+        } catch (e) {}
+      }
       await syncOrdersFromGoogleSheet(false);
     }
 
