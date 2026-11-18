@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>POS น้ำแข็งใส ไส่ไม่ยัง By อวท. V4.0</title>
+  <title>POS น้ำแข็งใส ไส่ไม่ยั้ง By อวท. V4.0</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -84,6 +84,7 @@
         <button onclick="clearAllKitchen()" class="pos-btn bg-rose-600 font-bold px-3 h-9 rounded-lg"><i class="fa-solid fa-broom mr-1"></i><span class="hidden sm:inline">เคลียร์ทั้งหมด</span></button>
       </div>
     </div>
+    <div id="kitchenWarn" class="hidden bg-rose-700 text-white text-xs font-bold px-3 py-1.5 text-center shrink-0"></div>
     <div id="kitchenGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 content-start"></div>
   </div>
 
@@ -217,8 +218,9 @@
 
     <div class="flex items-center gap-1 sm:gap-1.5 text-xs shrink-0">
       <div class="hidden md:block bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400" id="liveClock">00:00:00</div>
-      <button onclick="openKitchenLink()" class="pos-btn bg-orange-500 hover:bg-orange-400 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอครัว">
+      <button onclick="openKitchenLink()" class="pos-btn relative bg-orange-500 hover:bg-orange-400 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอครัว (ออเดอร์ค้าง)">
         <i class="fa-solid fa-fire-burner"></i><span class="hidden sm:inline">จอครัว</span>
+        <span id="kitchenCountBadge" class="hidden bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
       </button>
       <button onclick="openCustomerLinkModal()" class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอลูกค้า">
         <i class="fa-solid fa-tv"></i><span class="hidden sm:inline">จอลูกค้า</span>
@@ -438,11 +440,12 @@
         <button onclick="closeModal('historyModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-3 sm:p-4 overflow-y-auto space-y-3 flex-1 min-h-0">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <div class="bg-maroon-50 border p-2.5 rounded-xl"><div class="text-xs text-maroon-700">บิลทั้งหมด</div><div id="histTotalBills" class="text-lg sm:text-xl font-mono font-bold">0 บิล</div></div>
           <div class="bg-emerald-50 border p-2.5 rounded-xl"><div class="text-xs text-emerald-700">เงินสด</div><div id="histCashSales" class="text-lg sm:text-xl font-mono font-bold text-emerald-800">฿0</div></div>
           <div class="bg-sky-50 border p-2.5 rounded-xl"><div class="text-xs text-sky-700">สแกน QR</div><div id="histQrSales" class="text-lg sm:text-xl font-mono font-bold text-sky-800">฿0</div></div>
           <div class="bg-amber-50 border p-2.5 rounded-xl"><div class="text-xs text-amber-800 font-bold">ยอดขายรวม</div><div id="histTotalRevenue" class="text-lg sm:text-xl font-mono font-bold text-maroon-800">฿0</div></div>
+          <div class="bg-orange-50 border p-2.5 rounded-xl"><div class="text-xs text-orange-700 font-bold">ค้างในครัว</div><div id="histKitchenPending" class="text-lg sm:text-xl font-mono font-bold text-orange-800">0 ออเดอร์</div></div>
         </div>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
           <input type="text" id="historySearchInput" oninput="renderHistoryTable()" placeholder="🔍 ค้นหาคิว, เลขบิล หรือเมนู..." class="w-full sm:w-60 px-3 py-1.5 border rounded-xl" />
@@ -453,7 +456,7 @@
           </div>
         </div>
         <div class="border rounded-xl overflow-auto max-h-[50vh]">
-          <table class="w-full text-left border-collapse text-xs min-w-[560px]">
+          <table class="w-full text-left border-collapse text-xs min-w-[720px]">
             <thead class="bg-maroon-800 text-white sticky top-0">
               <tr>
                 <th class="p-2">คิว / เลขบิล</th>
@@ -461,6 +464,7 @@
                 <th class="p-2">รายการ</th>
                 <th class="p-2 text-center">ชำระ</th>
                 <th class="p-2 text-right">ยอดสุทธิ</th>
+                <th class="p-2 text-center">สถานะครัว</th>
                 <th class="p-2 text-center">ใบเสร็จ</th>
               </tr>
             </thead>
@@ -664,6 +668,10 @@
       renderQrDisplay();
       broadcastCustomerState('ORDERING');
       syncOrdersFromGoogleSheet(true);
+      // อัปเดตสถานะครัวบนหน้า POS ทุก 10 วินาที (ไม่รีเฟรชตอนเปิดหน้าประวัติอยู่)
+      setInterval(() => {
+        if (document.getElementById('historyModal').classList.contains('hidden')) syncOrdersFromGoogleSheet(true);
+      }, 10000);
 
       if (!getGasUrl() && !safeGet('AFT_ASKED_CONFIG')) {
         safeSet('AFT_ASKED_CONFIG', '1');
@@ -854,6 +862,64 @@
     function getLocalKitchen() { try { return JSON.parse(safeGet('AFT_KITCHEN_QUEUE') || '[]'); } catch (e) { return []; } }
     function saveLocalKitchen(a) { safeSet('AFT_KITCHEN_QUEUE', JSON.stringify(a)); }
 
+    // สถานะครัวที่จำไว้ในเครื่อง (ใช้เป็นสำรองเมื่อ Apps Script ยังเป็นเวอร์ชันเก่า)
+    function getKStatusMap() { try { return JSON.parse(safeGet('AFT_KSTATUS') || '{}'); } catch (e) { return {}; } }
+    function saveKStatusMap(m) { safeSet('AFT_KSTATUS', JSON.stringify(m)); }
+    function parseThaiTs(s) {
+      const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})[ ,]+(\d{1,2}):(\d{2}):(\d{2})/.exec(String(s || ''));
+      if (!m) return 0;
+      let y = +m[3]; if (y > 2400) y -= 543;
+      return new Date(y, +m[2] - 1, +m[1], +m[4], +m[5], +m[6]).getTime();
+    }
+    function getOrderKStatus(o) {
+      if (o.kitchenStatus) return o.kitchenStatus;
+      const m = getKStatusMap()[o.orderId]; if (m) return m;
+      const ts = parseThaiTs(o.timestamp);
+      return (ts && Date.now() - ts < 12 * 3600 * 1000) ? 'PENDING' : 'DONE';
+    }
+    function legacyToKitchen(o) {
+      const ts = parseThaiTs(o.timestamp);
+      if (!ts || Date.now() - ts > 12 * 3600 * 1000) return null;
+      const st = getKStatusMap()[o.orderId] || 'PENDING';
+      if (st === 'DONE') return null;
+      return { orderId:o.orderId, queueNo:o.queueNo, timestamp:o.timestamp, items:o.items || [], kitchenStatus:st, createdAt:ts };
+    }
+    function setKitchenWarn(mode) {
+      const el = document.getElementById('kitchenWarn'); if (!el) return;
+      const msg = mode === 'legacy' ? '⚠️ Google Apps Script ยังเป็นเวอร์ชันเก่า (ไม่มีระบบครัว) — ใช้โหมดสำรอง ซิงค์ได้เฉพาะเครื่องนี้ กรุณาวาง Code.gs ใหม่แล้ว Deploy > New version'
+                : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง' : '';
+      el.textContent = msg; el.classList.toggle('hidden', !msg);
+    }
+
+    // ช่องเปลี่ยนสถานะครัวในตารางประวัติ (พนักงาน + เจ้าของร้านใช้ได้)
+    function kitchenStatusCell(o) {
+      const st = getOrderKStatus(o);
+      const cls = st === 'PENDING' ? 'bg-amber-100 text-amber-900 border-amber-300' : st === 'COOKING' ? 'bg-sky-100 text-sky-900 border-sky-300' : 'bg-emerald-100 text-emerald-900 border-emerald-300';
+      return `<td class="p-2 text-center"><select onchange="changeOrderStatus('${o.orderId}', this.value)" class="px-1.5 py-1 rounded-lg border text-[11px] font-bold ${cls}">
+        <option value="PENDING" ${st === 'PENDING' ? 'selected' : ''}>🆕 รอรับ</option>
+        <option value="COOKING" ${st === 'COOKING' ? 'selected' : ''}>🔥 กำลังทำ</option>
+        <option value="DONE" ${st === 'DONE' ? 'selected' : ''}>✅ เสร็จแล้ว</option></select></td>`;
+    }
+    async function changeOrderStatus(id, status) {
+      const map = getKStatusMap(); map[id] = status; saveKStatusMap(map);
+      const orders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
+      orders.forEach(o => { if (o.orderId === id) o.kitchenStatus = status; });
+      safeSet('AFT_LOCAL_ORDERS', JSON.stringify(orders));
+      let q = getLocalKitchen();
+      if (status === 'DONE') q = q.filter(o => o.orderId !== id); else q.forEach(o => { if (o.orderId === id) o.kitchenStatus = status; });
+      saveLocalKitchen(q);
+      renderHistoryTable();
+      if (kitchenChannel) kitchenChannel.postMessage('refresh');
+      const gasUrl = getGasUrl();
+      if (gasUrl) {
+        try {
+          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action:'SET_KITCHEN_STATUS', apiKey:getApiKey(), orderId:id, status }) });
+        } catch (e) {}
+      }
+      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'อัปเดตสถานะแล้ว', showConfirmButton:false, timer:1000 });
+    }
+
     function getKitchenUrl() {
       const base = window.location.origin + window.location.pathname;
       const gas = getGasUrl();
@@ -908,16 +974,26 @@
       });
     }
 
+    let kitchenLegacy = false, kitchenLegacyAt = 0;
     async function loadKitchen() {
-      let list = [];
+      let list = [], mode = 'local';
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`);
-          const j = await r.json();
-          if (j && j.status === 'success' && Array.isArray(j.orders)) list = j.orders;
-        } catch (e) {}
+          if (!kitchenLegacy || Date.now() - kitchenLegacyAt > 30000) {
+            const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`);
+            const j = await r.json();
+            if (j && j.status === 'success' && Array.isArray(j.orders)) { list = j.orders; mode = 'cloud'; kitchenLegacy = false; }
+            else { kitchenLegacy = true; kitchenLegacyAt = Date.now(); }
+          }
+          if (kitchenLegacy) {
+            const r2 = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`);
+            const j2 = await r2.json();
+            if (j2 && j2.status === 'success' && Array.isArray(j2.orders)) { mode = 'legacy'; list = j2.orders.map(legacyToKitchen).filter(Boolean); }
+          }
+        } catch (e) { mode = 'offline'; }
       }
+      setKitchenWarn(mode);
       const ids = new Set(list.map(o => o.orderId));
       getLocalKitchen().forEach(o => { if (!ids.has(o.orderId)) list.push(o); });
       list = applyKitchenOverrides(list);
@@ -982,6 +1058,7 @@
     async function setKitchenStatus(id, status) {
       playBeep(status === 'DONE' ? 980 : 700, 80);
       kitchenOverride[id] = { status, ts: Date.now() };
+      const km = getKStatusMap(); km[id] = status; saveKStatusMap(km);
       let q = getLocalKitchen();
       if (status === 'DONE') q = q.filter(o => o.orderId !== id);
       else q.forEach(o => { if (o.orderId === id) o.kitchenStatus = status; });
@@ -1002,7 +1079,9 @@
       const c = await Swal.fire({ title:'เคลียร์ออเดอร์ทั้งหมด?', text:`มี ${kitchenOrders.length} ออเดอร์ค้างอยู่ (ประวัติการขายยังอยู่ครบ)`, icon:'warning',
         showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'เคลียร์ทั้งหมด', cancelButtonText:'ยกเลิก' });
       if (!c.isConfirmed) return;
-      kitchenOrders.forEach(o => { kitchenOverride[o.orderId] = { status:'DONE', ts:Date.now() }; });
+      const km = getKStatusMap();
+      kitchenOrders.forEach(o => { kitchenOverride[o.orderId] = { status:'DONE', ts:Date.now() }; km[o.orderId] = 'DONE'; });
+      saveKStatusMap(km);
       saveLocalKitchen([]);
       kitchenOrders = []; renderKitchen();
       const gasUrl = getGasUrl();
@@ -1216,7 +1295,8 @@
         changeAmount: cashReceivedAmount - total,
         items: JSON.parse(JSON.stringify(cart)),
         timestamp: new Date().toLocaleString('th-TH'),
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        kitchenStatus: 'PENDING'
       };
 
       const btn = document.getElementById('confirmCheckoutBtn');
@@ -1249,6 +1329,7 @@
       safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
       // ส่งเข้าจอครัว (ถ้าขึ้นคลาวด์ไม่ได้ ใช้คิวในเครื่องแทน)
       if (!savedToCloud) pushOrderToKitchen(orderData);
+      renderHistoryTable();
 
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึก';
@@ -1399,11 +1480,15 @@
       document.getElementById('histCashSales').textContent = `฿${cash.toLocaleString()}`;
       document.getElementById('histQrSales').textContent = `฿${qr.toLocaleString()}`;
       document.getElementById('histTotalRevenue').textContent = `฿${total.toLocaleString()}`;
+      const kPend = orders.filter(o => getOrderKStatus(o) !== 'DONE').length;
+      document.getElementById('histKitchenPending').textContent = `${kPend} ออเดอร์`;
+      const kb = document.getElementById('kitchenCountBadge');
+      if (kb) { kb.textContent = kPend; kb.classList.toggle('hidden', kPend === 0); }
 
       const filtered = orders.filter(o => o.orderId.toLowerCase().includes(kw) || o.queueNo.toLowerCase().includes(kw) || JSON.stringify(o.items).toLowerCase().includes(kw));
       const tbody = document.getElementById('historyTableBody');
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่มีข้อมูลประวัติการขาย</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">ไม่มีข้อมูลประวัติการขาย</td></tr>`;
         return;
       }
 
@@ -1414,6 +1499,7 @@
           <td class="p-2">${(o.items || []).map(i => `<div>• <b>${i.name}</b> ${i.toppings?.length ? `(+${i.toppings.join(',')})` : ''} x${i.qty}</div>`).join('')}</td>
           <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${o.paymentMethod === 'QR' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'}">${o.paymentMethod}</span></td>
           <td class="p-2 text-right font-mono font-bold text-maroon-800">฿${o.totalAmount}</td>
+          ${kitchenStatusCell(o)}
           <td class="p-2 text-center"><button onclick="openReceiptByOrderId('${o.orderId}')" class="bg-maroon-700 text-white px-2.5 py-1 rounded-lg font-bold whitespace-nowrap">ใบเสร็จ</button></td>
         </tr>
       `).join('');
