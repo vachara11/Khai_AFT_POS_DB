@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>POS น้ำแข็งใส ไส่ไม่ยั้ง By อวท. V4.0</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -14,8 +17,8 @@
       theme: {
         extend: {
           colors: {
-            maroon: { 50:'#fdf2f4', 100:'#fbe6ea', 200:'#f5c2cc', 600:'#8B1538', 700:'#6A0D25', 800:'#4E0719', 900:'#33030F', 950:'#1F0108' },
-            gold: { 400:'#FACC15', 500:'#D4AF37', 600:'#B59024' }
+            maroon: { 50: '#fdf2f4', 100: '#fbe6ea', 200: '#f5c2cc', 600: '#8B1538', 700: '#6A0D25', 800: '#4E0719', 900: '#33030F', 950: '#1F0108' },
+            gold: { 400: '#FACC15', 500: '#D4AF37', 600: '#B59024' }
           },
           fontFamily: { sans: ['Kanit', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
         }
@@ -23,82 +26,180 @@
     }
   </script>
   <style>
-    html, body { height: 100%; }
+    html,
     body {
-      font-family: 'Kanit', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent;
-      height: 100vh; height: 100dvh;
-      overscroll-behavior: none; touch-action: manipulation;
+      height: 100%;
     }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #8B1538; border-radius: 4px; }
-    .pos-btn:active { transform: scale(0.96); }
-    input, select { font-size: 16px; }
-    @media (min-width: 640px) { input, select { font-size: 14px; } }
-    .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
 
-    #mobileBar { display: none; }
-    #cartBackdrop { display: none; }
+    body {
+      font-family: 'Kanit', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      height: 100vh;
+      height: 100dvh;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #8B1538;
+      border-radius: 4px;
+    }
+
+    .pos-btn:active {
+      transform: scale(0.96);
+    }
+
+    input,
+    select {
+      font-size: 16px;
+    }
+
+    @media (min-width: 640px) {
+
+      input,
+      select {
+        font-size: 14px;
+      }
+    }
+
+    .safe-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
+
+    #mobileBar {
+      display: none;
+    }
+
+    #cartBackdrop {
+      display: none;
+    }
+
     @media (max-width: 1023px) {
       #cartPanel {
-        position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
-        height: 88vh; height: 88dvh; z-index: 30;
-        transform: translateY(105%); transition: transform .28s ease;
-        border-radius: 20px 20px 0 0; overflow: hidden;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 88vh;
+        height: 88dvh;
+        z-index: 30;
+        transform: translateY(105%);
+        transition: transform .28s ease;
+        border-radius: 20px 20px 0 0;
+        overflow: hidden;
       }
-      #cartPanel.open { transform: translateY(0); }
-      #cartBackdrop.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 25; }
+
+      #cartPanel.open {
+        transform: translateY(0);
+      }
+
+      #cartBackdrop.show {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .5);
+        z-index: 25;
+      }
+
       #mobileBar {
-        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-        padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: #fff;
-        border-top: 3px solid #D4AF37; box-shadow: 0 -4px 14px rgba(0,0,0,.15);
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        background: #fff;
+        border-top: 3px solid #D4AF37;
+        box-shadow: 0 -4px 14px rgba(0, 0, 0, .15);
       }
-      #menuGrid { padding-bottom: 84px; }
+
+      #menuGrid {
+        padding-bottom: 84px;
+      }
     }
 
     @media print {
-      body > *:not(#printContainer) { display: none !important; }
-      #printContainer { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; padding: 4mm; background: #fff; color: #000; }
+      body>*:not(#printContainer) {
+        display: none !important;
+      }
+
+      #printContainer {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        padding: 4mm;
+        background: #fff;
+        color: #000;
+      }
     }
   </style>
 </head>
+
 <body class="bg-slate-100 flex flex-col overflow-hidden">
 
   <div id="printContainer" class="hidden"></div>
 
   <!-- ================= จอครัว / เซฟ (?screen=kitchen) ================= -->
   <div id="kitchenScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col">
-    <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-5 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shrink-0">
+    <div
+      class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-5 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shrink-0">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-fire-burner"></i></div>
+        <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0"><i
+            class="fa-solid fa-fire-burner"></i></div>
         <div class="min-w-0">
           <h1 class="text-base sm:text-xl font-bold truncate">จอครัว (เซฟ)</h1>
           <p class="text-[11px] text-gold-400 truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</p>
         </div>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 text-xs">
-        <span class="bg-amber-500 text-maroon-950 font-bold px-2.5 py-1 rounded-full">รอรับ <span id="kPendingCount">0</span></span>
-        <span class="bg-sky-500 text-white font-bold px-2.5 py-1 rounded-full">กำลังทำ <span id="kCookingCount">0</span></span>
-        <button onclick="toggleKitchenSound()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i id="kSoundIcon" class="fa-solid fa-volume-high"></i></button>
-        <button onclick="loadKitchen()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i class="fa-solid fa-arrows-rotate"></i></button>
-        <button onclick="clearAllKitchen()" class="pos-btn bg-rose-600 font-bold px-3 h-9 rounded-lg"><i class="fa-solid fa-broom mr-1"></i><span class="hidden sm:inline">เคลียร์ทั้งหมด</span></button>
+        <span class="bg-amber-500 text-maroon-950 font-bold px-2.5 py-1 rounded-full">รอรับ <span
+            id="kPendingCount">0</span></span>
+        <span class="bg-sky-500 text-white font-bold px-2.5 py-1 rounded-full">กำลังทำ <span
+            id="kCookingCount">0</span></span>
+        <button onclick="toggleKitchenSound()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i
+            id="kSoundIcon" class="fa-solid fa-volume-high"></i></button>
+        <button onclick="loadKitchen()" class="pos-btn w-9 h-9 rounded-lg bg-white/15 border border-white/20"><i
+            class="fa-solid fa-arrows-rotate"></i></button>
+        <button onclick="clearAllKitchen()" class="pos-btn bg-rose-600 font-bold px-3 h-9 rounded-lg"><i
+            class="fa-solid fa-broom mr-1"></i><span class="hidden sm:inline">เคลียร์ทั้งหมด</span></button>
       </div>
     </div>
-    <div id="kitchenWarn" class="hidden bg-rose-700 text-white text-xs font-bold px-3 py-1.5 text-center shrink-0"></div>
-    <div id="kitchenGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 content-start"></div>
+    <div id="kitchenWarn" class="hidden bg-rose-700 text-white text-xs font-bold px-3 py-1.5 text-center shrink-0">
+    </div>
+    <div id="kitchenGrid"
+      class="flex-1 overflow-y-auto p-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 content-start">
+    </div>
   </div>
 
   <!-- ================= จอลูกค้า (?screen=customer) ================= -->
-  <div id="customerScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col overflow-y-auto lg:overflow-hidden">
-    <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-6 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shadow-lg shrink-0">
+  <div id="customerScreenView"
+    class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col overflow-y-auto lg:overflow-hidden">
+    <div
+      class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-6 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shadow-lg shrink-0">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-10 h-10 rounded-2xl bg-gold-500 text-maroon-950 flex items-center justify-center text-xl font-extrabold shadow shrink-0">
+        <div
+          class="w-10 h-10 rounded-2xl bg-gold-500 text-maroon-950 flex items-center justify-center text-xl font-extrabold shadow shrink-0">
           <i class="fa-solid fa-ice-cream"></i>
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <h1 class="text-base sm:text-xl font-bold text-white truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h1>
-            <span class="bg-emerald-500 text-maroon-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse hidden sm:inline">7-DISPLAY</span>
+            <span
+              class="bg-emerald-500 text-maroon-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse hidden sm:inline">7-DISPLAY</span>
           </div>
           <p class="text-[11px] text-gold-400 truncate">น้ำแข็งใสเย็นชื่นใจ • วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</p>
         </div>
@@ -108,18 +209,24 @@
           <div class="text-[10px] text-maroon-200">หมายเลขคิว</div>
           <div id="custQueueNo" class="text-xl sm:text-2xl font-mono font-bold text-gold-400">A001</div>
         </div>
-        <div id="custLiveClock" class="hidden sm:block bg-black/40 border border-gold-500/40 px-3 py-1.5 rounded-xl font-mono text-lg text-gold-400">00:00:00</div>
+        <div id="custLiveClock"
+          class="hidden sm:block bg-black/40 border border-gold-500/40 px-3 py-1.5 rounded-xl font-mono text-lg text-gold-400">
+          00:00:00</div>
       </div>
     </div>
 
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 lg:overflow-hidden p-3 sm:p-4 gap-3 sm:gap-4">
-      <div class="lg:col-span-7 bg-white text-slate-800 rounded-3xl shadow-2xl border-2 border-gold-500/60 flex flex-col overflow-hidden min-h-[55vh] lg:min-h-0">
+      <div
+        class="lg:col-span-7 bg-white text-slate-800 rounded-3xl shadow-2xl border-2 border-gold-500/60 flex flex-col overflow-hidden min-h-[55vh] lg:min-h-0">
         <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center">
-          <span class="font-bold text-sm sm:text-base"><i class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการของคุณ</span>
-          <span class="text-xs bg-maroon-950/60 px-3 py-1 rounded-full text-gold-400">รวม <strong id="custTotalQty">0</strong> รายการ</span>
+          <span class="font-bold text-sm sm:text-base"><i
+              class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการของคุณ</span>
+          <span class="text-xs bg-maroon-950/60 px-3 py-1 rounded-full text-gold-400">รวม <strong
+              id="custTotalQty">0</strong> รายการ</span>
         </div>
         <div id="custItemList" class="flex-1 overflow-y-auto divide-y divide-slate-200 p-3 space-y-2 bg-slate-50"></div>
-        <div class="bg-slate-900 text-white p-3 sm:p-4 border-t-4 border-gold-500 flex items-center justify-between gap-2">
+        <div
+          class="bg-slate-900 text-white p-3 sm:p-4 border-t-4 border-gold-500 flex items-center justify-between gap-2">
           <div class="min-w-0">
             <div class="text-xs text-slate-400">ยอดรวมสุทธิ</div>
             <div id="custStatusBadge" class="text-xs sm:text-sm font-bold text-emerald-400">พร้อมรับออเดอร์...</div>
@@ -128,18 +235,24 @@
         </div>
       </div>
 
-      <div class="lg:col-span-5 bg-gradient-to-b from-maroon-900 to-maroon-950 rounded-3xl shadow-2xl border-2 border-gold-500/60 p-5 flex flex-col items-center justify-center text-center">
+      <div
+        class="lg:col-span-5 bg-gradient-to-b from-maroon-900 to-maroon-950 rounded-3xl shadow-2xl border-2 border-gold-500/60 p-5 flex flex-col items-center justify-center text-center">
         <div id="custRightWelcome" class="space-y-3 max-w-xs">
-          <div class="w-20 h-20 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto">
+          <div
+            class="w-20 h-20 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto">
             <i class="fa-solid fa-ice-cream text-4xl text-gold-400"></i>
           </div>
           <h2 class="text-xl font-bold text-white">ยินดีต้อนรับสู่ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h2>
-          <p class="text-xs text-maroon-100">น้ำแข็งใสเย็นชื่นใจ เลือกท็อปปิ้งได้ตามใจชอบ กรุณาตรวจสอบรายการบนหน้าจอได้เลยครับ</p>
+          <p class="text-xs text-maroon-100">น้ำแข็งใสเย็นชื่นใจ เลือกท็อปปิ้งได้ตามใจชอบ
+            กรุณาตรวจสอบรายการบนหน้าจอได้เลยครับ</p>
         </div>
 
         <div id="custRightQrPay" class="hidden w-full flex-col items-center justify-center space-y-3">
-          <span class="bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce">📱 กรุณาสแกน QR Code เพื่อชำระเงิน</span>
-          <div id="custQrBox" class="w-56 h-56 max-w-[70vw] max-h-[70vw] bg-white p-2.5 rounded-2xl shadow-2xl border-4 border-gold-400 flex items-center justify-center overflow-hidden"></div>
+          <span class="bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce">📱 กรุณาสแกน QR
+            Code เพื่อชำระเงิน</span>
+          <div id="custQrBox"
+            class="w-56 h-56 max-w-[70vw] max-h-[70vw] bg-white p-2.5 rounded-2xl shadow-2xl border-4 border-gold-400 flex items-center justify-center overflow-hidden">
+          </div>
           <div id="custQrAccountName" class="text-sm font-bold text-gold-400"></div>
           <div class="bg-black/40 border border-gold-500/40 px-5 py-2 rounded-2xl">
             <div class="text-xs text-slate-300">ยอดโอนชำระ</div>
@@ -148,14 +261,19 @@
         </div>
 
         <div id="custRightCashSummary" class="hidden w-full flex-col items-center justify-center space-y-3">
-          <div class="w-16 h-16 rounded-full bg-emerald-500 text-maroon-950 flex items-center justify-center text-3xl shadow-lg">
+          <div
+            class="w-16 h-16 rounded-full bg-emerald-500 text-maroon-950 flex items-center justify-center text-3xl shadow-lg">
             <i class="fa-solid fa-check"></i>
           </div>
           <h3 class="text-xl font-bold text-gold-400">ขอบคุณที่ใช้บริการครับ 🙏</h3>
-          <div class="w-full max-w-xs bg-black/40 border border-gold-500/30 rounded-2xl p-4 space-y-1.5 font-mono text-sm">
-            <div class="flex justify-between text-slate-300"><span class="font-sans">ยอดชำระ:</span><strong id="custSummaryTotal" class="text-white">฿0.00</strong></div>
-            <div class="flex justify-between text-emerald-400"><span class="font-sans">รับเงินมา:</span><strong id="custSummaryReceived">฿0.00</strong></div>
-            <div class="border-t border-slate-700 pt-2 flex justify-between text-lg text-gold-400 font-bold"><span class="font-sans">เงินทอน:</span><strong id="custSummaryChange">฿0.00</strong></div>
+          <div
+            class="w-full max-w-xs bg-black/40 border border-gold-500/30 rounded-2xl p-4 space-y-1.5 font-mono text-sm">
+            <div class="flex justify-between text-slate-300"><span class="font-sans">ยอดชำระ:</span><strong
+                id="custSummaryTotal" class="text-white">฿0.00</strong></div>
+            <div class="flex justify-between text-emerald-400"><span class="font-sans">รับเงินมา:</span><strong
+                id="custSummaryReceived">฿0.00</strong></div>
+            <div class="border-t border-slate-700 pt-2 flex justify-between text-lg text-gold-400 font-bold"><span
+                class="font-sans">เงินทอน:</span><strong id="custSummaryChange">฿0.00</strong></div>
           </div>
         </div>
       </div>
@@ -163,10 +281,12 @@
   </div>
 
   <!-- ================= 1. ล็อกอิน PIN ================= -->
-  <div id="pinLockModal" class="fixed inset-0 bg-maroon-900/95 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
+  <div id="pinLockModal"
+    class="fixed inset-0 bg-maroon-900/95 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-gold-500 my-auto">
       <div class="bg-gradient-to-r from-maroon-800 to-maroon-600 p-3 text-center text-white">
-        <div class="w-12 h-12 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto mb-1">
+        <div
+          class="w-12 h-12 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto mb-1">
           <i class="fa-solid fa-ice-cream text-xl text-gold-400"></i>
         </div>
         <h2 class="text-lg font-bold">น้ำแข็งใส ไส่ไม่ยั้ง By อวท. POS</h2>
@@ -176,67 +296,105 @@
         <input type="password" id="pinDisplay" readonly placeholder="••••"
           class="w-full text-center text-2xl font-mono tracking-[0.6em] py-2 mb-3 bg-slate-100 border-2 border-slate-300 rounded-xl text-maroon-800 font-bold" />
         <div class="grid grid-cols-3 gap-2.5">
-          <button onclick="pressPin('1')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">1</button>
-          <button onclick="pressPin('2')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">2</button>
-          <button onclick="pressPin('3')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">3</button>
-          <button onclick="pressPin('4')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">4</button>
-          <button onclick="pressPin('5')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">5</button>
-          <button onclick="pressPin('6')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">6</button>
-          <button onclick="pressPin('7')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">7</button>
-          <button onclick="pressPin('8')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">8</button>
-          <button onclick="pressPin('9')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">9</button>
-          <button onclick="clearPin()" class="pos-btn py-3 bg-rose-100 text-rose-700 rounded-xl text-sm font-bold border border-rose-200">ล้าง</button>
-          <button onclick="pressPin('0')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">0</button>
-          <button onclick="submitPin()" class="pos-btn py-3 bg-maroon-700 text-white rounded-xl text-sm font-bold shadow">ตกลง</button>
+          <button onclick="pressPin('1')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">1</button>
+          <button onclick="pressPin('2')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">2</button>
+          <button onclick="pressPin('3')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">3</button>
+          <button onclick="pressPin('4')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">4</button>
+          <button onclick="pressPin('5')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">5</button>
+          <button onclick="pressPin('6')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">6</button>
+          <button onclick="pressPin('7')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">7</button>
+          <button onclick="pressPin('8')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">8</button>
+          <button onclick="pressPin('9')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">9</button>
+          <button onclick="clearPin()"
+            class="pos-btn py-3 bg-rose-100 text-rose-700 rounded-xl text-sm font-bold border border-rose-200">ล้าง</button>
+          <button onclick="pressPin('0')"
+            class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">0</button>
+          <button onclick="submitPin()"
+            class="pos-btn py-3 bg-maroon-700 text-white rounded-xl text-sm font-bold shadow">ตกลง</button>
         </div>
         <div class="mt-3 flex flex-col gap-1.5 text-center">
-          <button onclick="openConfigModal()" class="text-xs text-slate-500 hover:text-maroon-700 underline"><i class="fa-solid fa-gear mr-1"></i>ตั้งค่าลิงก์ Google Apps Script</button>
-          <button onclick="switchToCustomerDisplayMode()" class="text-xs text-emerald-700 font-semibold hover:underline"><i class="fa-solid fa-tv mr-1"></i>เปิดเครื่องนี้เป็น "จอฝั่งลูกค้า (7-Display)"</button>
-          <button onclick="switchToKitchenMode()" class="text-xs text-orange-600 font-semibold hover:underline"><i class="fa-solid fa-fire-burner mr-1"></i>เปิดเครื่องนี้เป็น "จอครัว (เซฟ)"</button>
+          <button onclick="openConfigModal()" class="text-xs text-slate-500 hover:text-maroon-700 underline"><i
+              class="fa-solid fa-gear mr-1"></i>ตั้งค่าลิงก์ Google Apps Script</button>
+          <button onclick="switchToCustomerDisplayMode()"
+            class="text-xs text-emerald-700 font-semibold hover:underline"><i
+              class="fa-solid fa-tv mr-1"></i>เปิดเครื่องนี้เป็น "จอฝั่งลูกค้า (7-Display)"</button>
+          <button onclick="switchToKitchenMode()" class="text-xs text-orange-600 font-semibold hover:underline"><i
+              class="fa-solid fa-fire-burner mr-1"></i>เปิดเครื่องนี้เป็น "จอครัว (เซฟ)"</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================= 2. Header ================= -->
-  <header class="bg-gradient-to-r from-maroon-900 via-maroon-700 to-maroon-800 text-white px-2.5 sm:px-4 py-2 shadow-md flex items-center justify-between gap-2 border-b-2 border-gold-500 shrink-0">
+  <header
+    class="bg-gradient-to-r from-maroon-900 via-maroon-700 to-maroon-800 text-white px-2.5 sm:px-4 py-2 shadow-md flex items-center justify-between gap-2 border-b-2 border-gold-500 shrink-0">
     <div class="flex items-center gap-2 min-w-0">
-      <div class="w-9 h-9 rounded-xl bg-gold-500 text-maroon-900 flex items-center justify-center font-extrabold text-lg shadow shrink-0">
+      <div
+        class="w-9 h-9 rounded-xl bg-gold-500 text-maroon-900 flex items-center justify-center font-extrabold text-lg shadow shrink-0">
         <i class="fa-solid fa-ice-cream"></i>
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-1.5">
           <h1 class="font-bold text-sm sm:text-lg leading-tight truncate">น้ำแข็งใส ไส่ไม่ยั้ง By อวท.</h1>
-          <span id="roleBadge" class="bg-gold-500 text-maroon-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">CASHIER</span>
+          <span id="roleBadge"
+            class="bg-gold-500 text-maroon-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">CASHIER</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span id="dbStatusBadge" onclick="openConfigModal()" class="cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap">โหมดในเครื่อง</span>
+          <span id="dbStatusBadge" onclick="openConfigModal()"
+            class="cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap">โหมดในเครื่อง</span>
           <p id="cashierNameDisplay" class="text-[11px] text-maroon-100 truncate hidden sm:block">แคชเชียร์ อวท. 1</p>
         </div>
       </div>
     </div>
 
     <div class="flex items-center gap-1 sm:gap-1.5 text-xs shrink-0">
-      <div class="hidden md:block bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400" id="liveClock">00:00:00</div>
-      <button onclick="openKitchenLink()" class="pos-btn relative bg-orange-500 hover:bg-orange-400 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอครัว (ออเดอร์ค้าง)">
+      <div
+        class="hidden md:block bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400"
+        id="liveClock">00:00:00</div>
+      <button onclick="openKitchenLink()"
+        class="pos-btn relative bg-orange-500 hover:bg-orange-400 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1"
+        title="จอครัว (ออเดอร์ค้าง)">
         <i class="fa-solid fa-fire-burner"></i><span class="hidden sm:inline">จอครัว</span>
-        <span id="kitchenCountBadge" class="hidden bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
+        <span id="kitchenCountBadge"
+          class="hidden bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
       </button>
-      <button onclick="openCustomerLinkModal()" class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอลูกค้า">
+      <button onclick="openCustomerLinkModal()"
+        class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1"
+        title="จอลูกค้า">
         <i class="fa-solid fa-tv"></i><span class="hidden sm:inline">จอลูกค้า</span>
       </button>
-      <button onclick="recallHeldBill()" class="pos-btn relative bg-amber-500 hover:bg-amber-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="บิลพัก">
+      <button onclick="recallHeldBill()"
+        class="pos-btn relative bg-amber-500 hover:bg-amber-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1"
+        title="บิลพัก">
         <i class="fa-solid fa-pause"></i><span class="hidden sm:inline">บิลพัก</span>
-        <span id="heldCountBadge" class="bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
+        <span id="heldCountBadge"
+          class="bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
       </button>
-      <button onclick="openHistoryModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white font-semibold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg flex items-center justify-center gap-1 border border-white/20" title="ประวัติ/ใบเสร็จ">
+      <button onclick="openHistoryModal()"
+        class="pos-btn bg-white/15 hover:bg-white/25 text-white font-semibold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg flex items-center justify-center gap-1 border border-white/20"
+        title="ประวัติ/ใบเสร็จ">
         <i class="fa-solid fa-receipt text-gold-400"></i><span class="hidden lg:inline">ประวัติ/ใบเสร็จ</span>
       </button>
-      <button onclick="openAdminModal()" class="pos-btn bg-gold-500 hover:bg-gold-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="Admin">
+      <button onclick="openAdminModal()"
+        class="pos-btn bg-gold-500 hover:bg-gold-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1"
+        title="Admin">
         <i class="fa-solid fa-sliders"></i><span class="hidden sm:inline">Admin</span>
       </button>
-      <button onclick="openConfigModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg" title="ตั้งค่า Google Sheets"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-      <button onclick="lockPosScreen()" class="pos-btn bg-rose-600 hover:bg-rose-500 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg" title="ล็อกหน้าจอ"><i class="fa-solid fa-lock"></i></button>
+      <button onclick="openConfigModal()"
+        class="pos-btn bg-white/15 hover:bg-white/25 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg"
+        title="ตั้งค่า Google Sheets"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+      <button onclick="lockPosScreen()"
+        class="pos-btn bg-rose-600 hover:bg-rose-500 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg"
+        title="ล็อกหน้าจอ"><i class="fa-solid fa-lock"></i></button>
     </div>
   </header>
 
@@ -245,10 +403,17 @@
     <section class="flex-1 flex flex-col overflow-hidden bg-slate-100 p-2.5 sm:p-3 min-h-0">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5 shrink-0">
         <div class="flex gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5">
-          <button onclick="filterCategory('ALL')" data-cat="ALL" class="cat-btn whitespace-nowrap bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">ทั้งหมด</button>
-          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍧 เลือกท็อปปิ้ง</button>
-          <button onclick="filterCategory('SET')" data-cat="SET" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">⭐ เมนูฮิตขายดี</button>
-          <button onclick="filterCategory('DRINK')" data-cat="DRINK" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤 เครื่องดื่ม</button>
+          <button onclick="filterCategory('ALL')" data-cat="ALL"
+            class="cat-btn whitespace-nowrap bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">ทั้งหมด</button>
+          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM"
+            class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍧
+            เลือกท็อปปิ้ง</button>
+          <button onclick="filterCategory('SET')" data-cat="SET"
+            class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">⭐
+            เมนูฮิตขายดี</button>
+          <button onclick="filterCategory('DRINK')" data-cat="DRINK"
+            class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤
+            เครื่องดื่ม</button>
         </div>
         <div class="relative w-full sm:w-52 shrink-0">
           <i class="fa-solid fa-barcode absolute left-3 top-2.5 text-slate-400"></i>
@@ -256,23 +421,31 @@
             class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-maroon-600" />
         </div>
       </div>
-      <div id="menuGrid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 content-start pr-0.5 min-h-0"></div>
+      <div id="menuGrid"
+        class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 content-start pr-0.5 min-h-0">
+      </div>
     </section>
 
     <div id="cartBackdrop" onclick="closeCartDrawer()"></div>
 
-    <aside id="cartPanel" class="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shrink-0 lg:h-auto shadow-xl min-h-0">
-      <div class="bg-slate-900 text-white p-3 border-b-4 border-gold-500 flex items-center justify-between shrink-0 gap-2">
+    <aside id="cartPanel"
+      class="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shrink-0 lg:h-auto shadow-xl min-h-0">
+      <div
+        class="bg-slate-900 text-white p-3 border-b-4 border-gold-500 flex items-center justify-between shrink-0 gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <button onclick="closeCartDrawer()" class="lg:hidden w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-chevron-down"></i></button>
+          <button onclick="closeCartDrawer()"
+            class="lg:hidden w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i
+              class="fa-solid fa-chevron-down"></i></button>
           <div class="min-w-0">
-            <span class="text-xs text-slate-400 font-mono">QUEUE # <strong id="queueDisplay" class="text-gold-400 text-sm">A001</strong></span>
+            <span class="text-xs text-slate-400 font-mono">QUEUE # <strong id="queueDisplay"
+                class="text-gold-400 text-sm">A001</strong></span>
             <p id="lastActionDisplay" class="text-xs text-emerald-400 truncate max-w-[170px]">พร้อมรับออเดอร์...</p>
           </div>
         </div>
         <div class="text-right shrink-0">
           <div class="text-[10px] text-slate-400">ยอดสุทธิ (บาท)</div>
-          <div id="bigTotalDisplay" class="text-2xl sm:text-3xl font-mono font-bold text-gold-400 leading-none">฿0.00</div>
+          <div id="bigTotalDisplay" class="text-2xl sm:text-3xl font-mono font-bold text-gold-400 leading-none">฿0.00
+          </div>
         </div>
       </div>
 
@@ -282,15 +455,19 @@
         <div class="flex justify-between items-center text-xs text-slate-600">
           <span>รวม: <strong id="totalQtyDisplay" class="text-maroon-800">0</strong> รายการ</span>
           <div class="flex gap-4">
-            <button onclick="holdCurrentBill()" class="text-amber-700 hover:underline font-semibold"><i class="fa-solid fa-pause mr-1"></i>พักบิล</button>
-            <button onclick="clearCart()" class="text-rose-600 hover:underline font-semibold"><i class="fa-solid fa-trash-can mr-1"></i>ล้างตะกร้า</button>
+            <button onclick="holdCurrentBill()" class="text-amber-700 hover:underline font-semibold"><i
+                class="fa-solid fa-pause mr-1"></i>พักบิล</button>
+            <button onclick="clearCart()" class="text-rose-600 hover:underline font-semibold"><i
+                class="fa-solid fa-trash-can mr-1"></i>ล้างตะกร้า</button>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="openPaymentModal('QR')" class="pos-btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-1.5 text-sm">
+          <button onclick="openPaymentModal('QR')"
+            class="pos-btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-1.5 text-sm">
             <i class="fa-solid fa-qrcode"></i> สแกนจ่าย QR
           </button>
-          <button onclick="openPaymentModal('CASH')" class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-1.5 text-sm border border-gold-500/40">
+          <button onclick="openPaymentModal('CASH')"
+            class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-1.5 text-sm border border-gold-500/40">
             <i class="fa-solid fa-cash-register text-gold-400"></i> รับเงินสด
           </button>
         </div>
@@ -304,7 +481,8 @@
       <div class="text-[11px] text-slate-500 leading-none"><span id="mobileQty">0</span> รายการ</div>
       <div id="mobileTotal" class="text-2xl font-mono font-bold text-maroon-700 leading-tight">฿0.00</div>
     </div>
-    <button onclick="openCartDrawer()" class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm border border-gold-500/40">
+    <button onclick="openCartDrawer()"
+      class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm border border-gold-500/40">
       <i class="fa-solid fa-basket-shopping text-gold-400"></i> ดูตะกร้า / ชำระเงิน
     </button>
   </div>
@@ -312,44 +490,65 @@
   <!-- ================= Modal ลิงก์จอลูกค้า ================= -->
   <div id="customerLinkModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border-2 border-emerald-600">
-      <div class="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-4 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-tv text-gold-400 mr-2"></i>ลิงก์หน้าจอลูกค้า</h3>
-        <button onclick="closeModal('customerLinkModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      <div
+        class="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-tv text-gold-400 mr-2"></i>ลิงก์หน้าจอลูกค้า
+        </h3>
+        <button onclick="closeModal('customerLinkModal')"
+          class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-sm">
-        <label class="block text-xs font-bold text-slate-600">คัดลอกลิงก์นี้ไปเปิดบนแท็บเล็ต/มือถืออีกเครื่อง (ลิงก์นี้มีการเชื่อม Google Sheets ติดไปด้วย ไม่ต้องตั้งค่าซ้ำ):</label>
+        <label class="block text-xs font-bold text-slate-600">คัดลอกลิงก์นี้ไปเปิดบนแท็บเล็ต/มือถืออีกเครื่อง
+          (ลิงก์นี้มีการเชื่อม Google Sheets ติดไปด้วย ไม่ต้องตั้งค่าซ้ำ):</label>
         <div class="flex gap-2">
-          <input type="text" id="customerDisplayUrlInput" readonly class="flex-1 min-w-0 px-3 py-2 bg-slate-100 border rounded-xl font-mono text-xs" />
-          <button onclick="copyCustomerDisplayUrl()" class="pos-btn bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow shrink-0"><i class="fa-solid fa-copy mr-1"></i>คัดลอก</button>
+          <input type="text" id="customerDisplayUrlInput" readonly
+            class="flex-1 min-w-0 px-3 py-2 bg-slate-100 border rounded-xl font-mono text-xs" />
+          <button onclick="copyCustomerDisplayUrl()"
+            class="pos-btn bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow shrink-0"><i
+              class="fa-solid fa-copy mr-1"></i>คัดลอก</button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          <button onclick="openCustomerPopupWindow()" class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-up-right-from-square mr-1"></i>เปิดในหน้าต่างใหม่</button>
-          <button onclick="pushTestQrToCustomerScreen()" class="pos-btn bg-sky-600 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-qrcode mr-1"></i>ทดสอบส่ง QR</button>
+          <button onclick="openCustomerPopupWindow()"
+            class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i
+              class="fa-solid fa-up-right-from-square mr-1"></i>เปิดในหน้าต่างใหม่</button>
+          <button onclick="pushTestQrToCustomerScreen()"
+            class="pos-btn bg-sky-600 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i
+              class="fa-solid fa-qrcode mr-1"></i>ทดสอบส่ง QR</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================= Modal ท็อปปิ้ง ================= -->
-  <div id="toppingModal" class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
-    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-maroon-200 flex flex-col max-h-[92vh] max-h-[92dvh]">
+  <div id="toppingModal"
+    class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
+    <div
+      class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-maroon-200 flex flex-col max-h-[92vh] max-h-[92dvh]">
       <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
         <div class="min-w-0">
           <h3 id="modalBaseTitle" class="font-bold text-sm sm:text-base truncate">เลือกท็อปปิ้ง</h3>
           <p class="text-xs text-gold-400">แตะเลือกเครื่องเคียงที่ต้องการเพิ่ม</p>
         </div>
-        <button onclick="closeModal('toppingModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('toppingModal')"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-3 sm:p-4 overflow-y-auto space-y-3 min-h-0">
         <div id="toppingOptionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         <div class="pt-2 border-t">
           <label class="block text-xs font-bold text-slate-500 mb-1.5">ตัวเลือกพิเศษ (ฟรี)</label>
           <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="toggleNote(this, 'หวานน้อย')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍬 หวานน้อย</button>
-            <button type="button" onclick="toggleNote(this, 'หวานมาก')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍭 หวานมาก</button>
-            <button type="button" onclick="toggleNote(this, 'เพิ่มนมข้น')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥛 เพิ่มนมข้น</button>
-            <button type="button" onclick="toggleNote(this, 'แยกท็อปปิ้ง')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥣 แยกท็อปปิ้ง</button>
-            <button type="button" onclick="toggleNote(this, 'ใส่กล่อง')" class="note-chip px-3 py-1.5 rounded-full text-xs border">📦 ใส่กล่อง</button>
+            <button type="button" onclick="toggleNote(this, 'หวานน้อย')"
+              class="note-chip px-3 py-1.5 rounded-full text-xs border">🍬 หวานน้อย</button>
+            <button type="button" onclick="toggleNote(this, 'หวานมาก')"
+              class="note-chip px-3 py-1.5 rounded-full text-xs border">🍭 หวานมาก</button>
+            <button type="button" onclick="toggleNote(this, 'เพิ่มนมข้น')"
+              class="note-chip px-3 py-1.5 rounded-full text-xs border">🥛 เพิ่มนมข้น</button>
+            <button type="button" onclick="toggleNote(this, 'แยกท็อปปิ้ง')"
+              class="note-chip px-3 py-1.5 rounded-full text-xs border">🥣 แยกท็อปปิ้ง</button>
+            <button type="button" onclick="toggleNote(this, 'ใส่กล่อง')"
+              class="note-chip px-3 py-1.5 rounded-full text-xs border">📦 ใส่กล่อง</button>
           </div>
         </div>
       </div>
@@ -358,7 +557,8 @@
           <span class="text-xs text-slate-500">ราคาต่อถ้วย</span>
           <div id="customPricePreview" class="text-2xl font-mono font-bold text-maroon-700">฿25</div>
         </div>
-        <button onclick="confirmCustomOmelet()" class="pos-btn bg-maroon-700 text-white font-bold px-5 py-3 rounded-xl shadow flex items-center gap-2 text-sm">
+        <button onclick="confirmCustomOmelet()"
+          class="pos-btn bg-maroon-700 text-white font-bold px-5 py-3 rounded-xl shadow flex items-center gap-2 text-sm">
           <i class="fa-solid fa-plus-circle text-gold-400"></i> เพิ่มลงตะกร้า
         </button>
       </div>
@@ -366,46 +566,75 @@
   </div>
 
   <!-- ================= Modal ชำระเงิน ================= -->
-  <div id="paymentModal" class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
-    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col max-h-[95vh] max-h-[95dvh]">
+  <div id="paymentModal"
+    class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
+    <div
+      class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col max-h-[95vh] max-h-[95dvh]">
       <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
-        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-cash-register text-gold-400 mr-2"></i>ชำระเงิน</h3>
-        <button onclick="closePaymentModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-cash-register text-gold-400 mr-2"></i>ชำระเงิน
+        </h3>
+        <button onclick="closePaymentModal()"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-3 sm:p-4 space-y-3 overflow-y-auto min-h-0 safe-bottom">
         <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-          <button id="tabCashBtn" onclick="switchPayMethod('CASH')" class="py-2 rounded-lg font-bold text-xs sm:text-sm bg-maroon-700 text-white">💵 เงินสด</button>
-          <button id="tabQrBtn" onclick="switchPayMethod('QR')" class="py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-600">📱 สแกน QR</button>
+          <button id="tabCashBtn" onclick="switchPayMethod('CASH')"
+            class="py-2 rounded-lg font-bold text-xs sm:text-sm bg-maroon-700 text-white">💵 เงินสด</button>
+          <button id="tabQrBtn" onclick="switchPayMethod('QR')"
+            class="py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-600">📱 สแกน QR</button>
         </div>
         <div class="grid grid-cols-3 gap-2 bg-slate-900 text-white p-3 rounded-xl text-center font-mono">
-          <div><div class="text-[10px] text-slate-400 font-sans">ยอดชำระ</div><div id="payModalTotal" class="text-base sm:text-lg font-bold text-gold-400">0</div></div>
-          <div class="border-x border-slate-700"><div class="text-[10px] text-slate-400 font-sans">รับเงินมา</div><div id="payModalReceived" class="text-base sm:text-lg font-bold text-emerald-400">0</div></div>
-          <div><div class="text-[10px] text-slate-400 font-sans">เงินทอน</div><div id="payModalChange" class="text-base sm:text-lg font-bold text-amber-300">0</div></div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-sans">ยอดชำระ</div>
+            <div id="payModalTotal" class="text-base sm:text-lg font-bold text-gold-400">0</div>
+          </div>
+          <div class="border-x border-slate-700">
+            <div class="text-[10px] text-slate-400 font-sans">รับเงินมา</div>
+            <div id="payModalReceived" class="text-base sm:text-lg font-bold text-emerald-400">0</div>
+          </div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-sans">เงินทอน</div>
+            <div id="payModalChange" class="text-base sm:text-lg font-bold text-amber-300">0</div>
+          </div>
         </div>
 
         <div id="cashInputSection" class="space-y-2.5">
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="setExactCash()" class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs">รับพอดี</button>
-            <button onclick="addCashBanknote(20)" class="pos-btn bg-emerald-50 text-emerald-900 font-mono font-bold py-2.5 rounded-xl border border-emerald-300">+฿20</button>
-            <button onclick="addCashBanknote(50)" class="pos-btn bg-sky-50 text-sky-900 font-mono font-bold py-2.5 rounded-xl border border-sky-300">+฿50</button>
-            <button onclick="addCashBanknote(100)" class="pos-btn bg-rose-50 text-rose-900 font-mono font-bold py-2.5 rounded-xl border border-rose-300">+฿100</button>
-            <button onclick="addCashBanknote(500)" class="pos-btn bg-purple-50 text-purple-900 font-mono font-bold py-2.5 rounded-xl border border-purple-300">+฿500</button>
-            <button onclick="addCashBanknote(1000)" class="pos-btn bg-slate-100 text-slate-900 font-mono font-bold py-2.5 rounded-xl border border-slate-300">+฿1000</button>
+            <button onclick="setExactCash()"
+              class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs">รับพอดี</button>
+            <button onclick="addCashBanknote(20)"
+              class="pos-btn bg-emerald-50 text-emerald-900 font-mono font-bold py-2.5 rounded-xl border border-emerald-300">+฿20</button>
+            <button onclick="addCashBanknote(50)"
+              class="pos-btn bg-sky-50 text-sky-900 font-mono font-bold py-2.5 rounded-xl border border-sky-300">+฿50</button>
+            <button onclick="addCashBanknote(100)"
+              class="pos-btn bg-rose-50 text-rose-900 font-mono font-bold py-2.5 rounded-xl border border-rose-300">+฿100</button>
+            <button onclick="addCashBanknote(500)"
+              class="pos-btn bg-purple-50 text-purple-900 font-mono font-bold py-2.5 rounded-xl border border-purple-300">+฿500</button>
+            <button onclick="addCashBanknote(1000)"
+              class="pos-btn bg-slate-100 text-slate-900 font-mono font-bold py-2.5 rounded-xl border border-slate-300">+฿1000</button>
           </div>
           <div class="flex gap-2">
-            <input type="number" inputmode="numeric" id="manualCashInput" oninput="onManualCashInput(this.value)" placeholder="พิมพ์จำนวนเงินที่รับมา..." class="flex-1 min-w-0 px-3 py-2 border rounded-xl font-mono" />
-            <button onclick="resetCashReceived()" class="px-3 py-2 bg-slate-200 rounded-xl text-xs font-bold">รีเซ็ต</button>
+            <input type="number" inputmode="numeric" id="manualCashInput" oninput="onManualCashInput(this.value)"
+              placeholder="พิมพ์จำนวนเงินที่รับมา..." class="flex-1 min-w-0 px-3 py-2 border rounded-xl font-mono" />
+            <button onclick="resetCashReceived()"
+              class="px-3 py-2 bg-slate-200 rounded-xl text-xs font-bold">รีเซ็ต</button>
           </div>
         </div>
 
         <div id="qrInputSection" class="hidden text-center py-2 px-2 bg-slate-50 rounded-xl border">
-          <div class="text-[11px] font-bold text-emerald-700 mb-1"><i class="fa-solid fa-tower-broadcast mr-1"></i>กำลังแสดง QR บนหน้าจอฝั่งลูกค้า!</div>
-          <div id="qrImageContainer" class="w-40 h-40 mx-auto bg-white p-2 rounded-xl border flex items-center justify-center overflow-hidden"></div>
+          <div class="text-[11px] font-bold text-emerald-700 mb-1"><i
+              class="fa-solid fa-tower-broadcast mr-1"></i>กำลังแสดง QR บนหน้าจอฝั่งลูกค้า!</div>
+          <div id="qrImageContainer"
+            class="w-40 h-40 mx-auto bg-white p-2 rounded-xl border flex items-center justify-center overflow-hidden">
+          </div>
           <p id="qrAccountInfoDisplay" class="text-xs font-semibold text-maroon-800 mt-1"></p>
-          <p class="text-xs text-slate-600">ยอดโอน <strong id="qrAmountText" class="text-maroon-700 font-mono">฿0</strong></p>
+          <p class="text-xs text-slate-600">ยอดโอน <strong id="qrAmountText"
+              class="text-maroon-700 font-mono">฿0</strong></p>
         </div>
 
-        <button id="confirmCheckoutBtn" onclick="submitOrderToGAS()" class="pos-btn w-full bg-gradient-to-r from-maroon-800 to-maroon-600 text-white font-bold py-3.5 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
+        <button id="confirmCheckoutBtn" onclick="submitOrderToGAS()"
+          class="pos-btn w-full bg-gradient-to-r from-maroon-800 to-maroon-600 text-white font-bold py-3.5 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
           <i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึก
         </button>
       </div>
@@ -414,45 +643,79 @@
 
   <!-- ================= Modal ใบเสร็จ ================= -->
   <div id="receiptPreviewModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col max-h-[92vh] max-h-[92dvh]">
+    <div
+      class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col max-h-[92vh] max-h-[92dvh]">
       <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center shrink-0">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-receipt text-gold-400 mr-1.5"></i>ใบเสร็จรับเงิน</h3>
-        <button onclick="closeModal('receiptPreviewModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('receiptPreviewModal')"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-3 overflow-y-auto bg-slate-200 flex justify-center min-h-0">
-        <div id="receiptCaptureBox" class="bg-white text-black p-4 rounded shadow w-[290px] max-w-full font-mono text-xs border"></div>
+        <div id="receiptCaptureBox"
+          class="bg-white text-black p-4 rounded shadow w-[290px] max-w-full font-mono text-xs border"></div>
       </div>
       <div class="p-3 bg-white border-t grid grid-cols-2 gap-2 shrink-0 safe-bottom">
-        <button onclick="downloadReceiptImage()" class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-download"></i> บันทึกรูป</button>
-        <button onclick="triggerBrowserPrint()" class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-print text-gold-400"></i> พิมพ์ / PDF</button>
+        <button onclick="downloadReceiptImage()"
+          class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i
+            class="fa-solid fa-download"></i> บันทึกรูป</button>
+        <button onclick="triggerBrowserPrint()"
+          class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i
+            class="fa-solid fa-print text-gold-400"></i> พิมพ์ / PDF</button>
       </div>
     </div>
   </div>
 
   <!-- ================= Modal ประวัติ ================= -->
   <div id="historyModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-0 sm:p-3">
-    <div class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col sm:max-h-[90vh]">
+    <div
+      class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col sm:max-h-[90vh]">
       <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
         <div class="min-w-0">
-          <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-chart-line text-gold-400 mr-2"></i>สรุปยอดขาย & ประวัติใบเสร็จ</h3>
+          <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-chart-line text-gold-400 mr-2"></i>สรุปยอดขาย
+            & ประวัติใบเสร็จ</h3>
           <p id="historySyncStatus" class="text-[11px] text-gold-400 truncate">กำลังตรวจสอบข้อมูล...</p>
         </div>
-        <button onclick="closeModal('historyModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('historyModal')"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-3 sm:p-4 overflow-y-auto space-y-3 flex-1 min-h-0">
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          <div class="bg-maroon-50 border p-2.5 rounded-xl"><div class="text-xs text-maroon-700">บิลทั้งหมด</div><div id="histTotalBills" class="text-lg sm:text-xl font-mono font-bold">0 บิล</div></div>
-          <div class="bg-emerald-50 border p-2.5 rounded-xl"><div class="text-xs text-emerald-700">เงินสด</div><div id="histCashSales" class="text-lg sm:text-xl font-mono font-bold text-emerald-800">฿0</div></div>
-          <div class="bg-sky-50 border p-2.5 rounded-xl"><div class="text-xs text-sky-700">สแกน QR</div><div id="histQrSales" class="text-lg sm:text-xl font-mono font-bold text-sky-800">฿0</div></div>
-          <div class="bg-amber-50 border p-2.5 rounded-xl"><div class="text-xs text-amber-800 font-bold">ยอดขายรวม</div><div id="histTotalRevenue" class="text-lg sm:text-xl font-mono font-bold text-maroon-800">฿0</div></div>
-          <div class="bg-orange-50 border p-2.5 rounded-xl"><div class="text-xs text-orange-700 font-bold">ค้างในครัว</div><div id="histKitchenPending" class="text-lg sm:text-xl font-mono font-bold text-orange-800">0 ออเดอร์</div></div>
+          <div class="bg-maroon-50 border p-2.5 rounded-xl">
+            <div class="text-xs text-maroon-700">บิลทั้งหมด</div>
+            <div id="histTotalBills" class="text-lg sm:text-xl font-mono font-bold">0 บิล</div>
+          </div>
+          <div class="bg-emerald-50 border p-2.5 rounded-xl">
+            <div class="text-xs text-emerald-700">เงินสด</div>
+            <div id="histCashSales" class="text-lg sm:text-xl font-mono font-bold text-emerald-800">฿0</div>
+          </div>
+          <div class="bg-sky-50 border p-2.5 rounded-xl">
+            <div class="text-xs text-sky-700">สแกน QR</div>
+            <div id="histQrSales" class="text-lg sm:text-xl font-mono font-bold text-sky-800">฿0</div>
+          </div>
+          <div class="bg-amber-50 border p-2.5 rounded-xl">
+            <div class="text-xs text-amber-800 font-bold">ยอดขายรวม</div>
+            <div id="histTotalRevenue" class="text-lg sm:text-xl font-mono font-bold text-maroon-800">฿0</div>
+          </div>
+          <div class="bg-orange-50 border p-2.5 rounded-xl">
+            <div class="text-xs text-orange-700 font-bold">ค้างในครัว</div>
+            <div id="histKitchenPending" class="text-lg sm:text-xl font-mono font-bold text-orange-800">0 ออเดอร์</div>
+          </div>
         </div>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-          <input type="text" id="historySearchInput" oninput="renderHistoryTable()" placeholder="🔍 ค้นหาคิว, เลขบิล หรือเมนู..." class="w-full sm:w-60 px-3 py-1.5 border rounded-xl" />
+          <input type="text" id="historySearchInput" oninput="renderHistoryTable()"
+            placeholder="🔍 ค้นหาคิว, เลขบิล หรือเมนู..." class="w-full sm:w-60 px-3 py-1.5 border rounded-xl" />
           <div class="flex flex-wrap gap-1.5">
-            <button onclick="syncOrdersFromGoogleSheet()" class="pos-btn bg-sky-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-arrows-rotate mr-1"></i>ซิงค์</button>
-            <button onclick="exportHistoryCSV()" class="pos-btn bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-file-csv mr-1"></i>โหลด Excel</button>
-            <button onclick="clearAllHistoryData()" class="pos-btn bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-trash-can mr-1"></i>ล้างประวัติ</button>
+            <button onclick="syncOrdersFromGoogleSheet()"
+              class="pos-btn bg-sky-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i
+                class="fa-solid fa-arrows-rotate mr-1"></i>ซิงค์</button>
+            <button onclick="exportHistoryCSV()"
+              class="pos-btn bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i
+                class="fa-solid fa-file-csv mr-1"></i>โหลด Excel</button>
+            <button onclick="clearAllHistoryData()"
+              class="pos-btn bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i
+                class="fa-solid fa-trash-can mr-1"></i>ล้างประวัติ</button>
           </div>
         </div>
         <div class="border rounded-xl overflow-auto max-h-[50vh]">
@@ -477,15 +740,24 @@
 
   <!-- ================= Modal Admin ================= -->
   <div id="adminModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-0 sm:p-3">
-    <div class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col sm:max-h-[92vh]">
-      <div class="bg-gradient-to-r from-maroon-900 to-maroon-700 text-white px-4 py-3 flex justify-between items-center shrink-0">
-        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-user-gear text-gold-400 mr-2"></i>จัดการร้าน Admin</h3>
-        <button onclick="closeModal('adminModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+    <div
+      class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col sm:max-h-[92vh]">
+      <div
+        class="bg-gradient-to-r from-maroon-900 to-maroon-700 text-white px-4 py-3 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-user-gear text-gold-400 mr-2"></i>จัดการร้าน
+          Admin</h3>
+        <button onclick="closeModal('adminModal')"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="flex border-b bg-slate-100 px-3 pt-2 gap-1.5 shrink-0 overflow-x-auto">
-        <button onclick="switchAdminTab('MENU')" id="admTabMenu" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍧 เมนูน้ำแข็งใส</button>
-        <button onclick="switchAdminTab('TOPPING')" id="admTabTopping" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">🧀 ท็อปปิ้ง</button>
-        <button onclick="switchAdminTab('QR')" id="admTabQr" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">📱 QR รับเงิน</button>
+        <button onclick="switchAdminTab('MENU')" id="admTabMenu"
+          class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍧
+          เมนูน้ำแข็งใส</button>
+        <button onclick="switchAdminTab('TOPPING')" id="admTabTopping"
+          class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">🧀 ท็อปปิ้ง</button>
+        <button onclick="switchAdminTab('QR')" id="admTabQr"
+          class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">📱 QR รับเงิน</button>
       </div>
       <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
         <div id="adminMenuSection" class="space-y-3">
@@ -493,15 +765,19 @@
             <h4 id="menuFormTitle" class="font-bold text-xs text-maroon-800 mb-2">➕ เพิ่ม / แก้ไขเมนู</h4>
             <input type="hidden" id="editMenuIndex" value="-1" />
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
-              <input type="text" id="inpMenuCode" placeholder="รหัส เช่น 108" class="px-2.5 py-2 border rounded-lg font-mono" />
-              <input type="text" id="inpMenuName" placeholder="ชื่อเมนู" class="col-span-2 px-2.5 py-2 border rounded-lg" />
-              <input type="number" inputmode="numeric" id="inpMenuPrice" placeholder="ราคา (บาท)" class="px-2.5 py-2 border rounded-lg font-mono" />
+              <input type="text" id="inpMenuCode" placeholder="รหัส เช่น 108"
+                class="px-2.5 py-2 border rounded-lg font-mono" />
+              <input type="text" id="inpMenuName" placeholder="ชื่อเมนู"
+                class="col-span-2 px-2.5 py-2 border rounded-lg" />
+              <input type="number" inputmode="numeric" id="inpMenuPrice" placeholder="ราคา (บาท)"
+                class="px-2.5 py-2 border rounded-lg font-mono" />
               <select id="inpMenuCat" class="px-2 py-2 border rounded-lg bg-white">
                 <option value="CUSTOM">เลือกท็อปปิ้ง</option>
                 <option value="SET" selected>เมนูฮิตขายดี</option>
                 <option value="DRINK">เครื่องดื่ม</option>
               </select>
-              <input type="text" id="inpMenuBadge" placeholder="ป้าย เช่น ขายดี" class="px-2.5 py-2 border rounded-lg" />
+              <input type="text" id="inpMenuBadge" placeholder="ป้าย เช่น ขายดี"
+                class="px-2.5 py-2 border rounded-lg" />
             </div>
             <div class="flex flex-wrap items-center justify-between gap-2 mt-2.5 pt-2 border-t">
               <label class="flex items-center gap-1.5 text-xs font-medium cursor-pointer">
@@ -510,14 +786,22 @@
               </label>
               <div class="flex gap-2">
                 <button onclick="resetMenuForm()" class="px-3 py-1.5 rounded-lg border bg-white text-xs">ล้าง</button>
-                <button onclick="saveMenuItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-1.5 rounded-lg text-xs">บันทึกเมนู</button>
+                <button onclick="saveMenuItem()"
+                  class="pos-btn bg-maroon-700 text-white font-bold px-4 py-1.5 rounded-lg text-xs">บันทึกเมนู</button>
               </div>
             </div>
           </div>
           <div class="border rounded-xl overflow-auto">
             <table class="w-full text-left border-collapse text-xs min-w-[480px]">
               <thead class="bg-slate-800 text-white">
-                <tr><th class="p-2">รหัส</th><th class="p-2">ชื่อเมนู</th><th class="p-2">หมวด</th><th class="p-2 text-center">ท็อปปิ้ง</th><th class="p-2 text-right">ราคา</th><th class="p-2 text-center">จัดการ</th></tr>
+                <tr>
+                  <th class="p-2">รหัส</th>
+                  <th class="p-2">ชื่อเมนู</th>
+                  <th class="p-2">หมวด</th>
+                  <th class="p-2 text-center">ท็อปปิ้ง</th>
+                  <th class="p-2 text-right">ราคา</th>
+                  <th class="p-2 text-center">จัดการ</th>
+                </tr>
               </thead>
               <tbody id="adminMenuTableBody" class="divide-y"></tbody>
             </table>
@@ -527,9 +811,12 @@
         <div id="adminToppingSection" class="hidden space-y-3">
           <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex flex-wrap gap-2 items-end">
             <input type="hidden" id="editToppingIndex" value="-1" />
-            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น บัวลอย" class="flex-1 min-w-[150px] px-3 py-2 border rounded-lg text-xs" />
-            <input type="number" inputmode="numeric" id="inpToppingPrice" placeholder="ราคาบวกเพิ่ม" class="w-28 px-3 py-2 border rounded-lg text-xs font-mono" />
-            <button onclick="saveToppingItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-lg text-xs">บันทึก</button>
+            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น บัวลอย"
+              class="flex-1 min-w-[150px] px-3 py-2 border rounded-lg text-xs" />
+            <input type="number" inputmode="numeric" id="inpToppingPrice" placeholder="ราคาบวกเพิ่ม"
+              class="w-28 px-3 py-2 border rounded-lg text-xs font-mono" />
+            <button onclick="saveToppingItem()"
+              class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-lg text-xs">บันทึก</button>
             <button onclick="resetToppingForm()" class="px-3 py-2 rounded-lg border bg-white text-xs">ล้าง</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="adminToppingList"></div>
@@ -538,22 +825,30 @@
         <div id="adminQrSection" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-slate-50 border p-4 rounded-xl space-y-3 text-xs">
             <h4 class="font-bold text-maroon-800 text-sm">อัปโหลดรูป QR Code รับเงินของร้าน</h4>
-            <input type="file" id="qrFileInput" accept="image/*" onchange="handleQrFileUpload(event)" class="block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-maroon-700 file:text-white" />
-            <input type="text" id="inpQrAccountText" placeholder="ชื่อบัญชี / พร้อมเพย์ใต้รูป QR" class="w-full px-3 py-2 border rounded-xl text-xs" />
+            <input type="file" id="qrFileInput" accept="image/*" onchange="handleQrFileUpload(event)"
+              class="block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-maroon-700 file:text-white" />
+            <input type="text" id="inpQrAccountText" placeholder="ชื่อบัญชี / พร้อมเพย์ใต้รูป QR"
+              class="w-full px-3 py-2 border rounded-xl text-xs" />
             <div class="flex gap-2">
-              <button onclick="saveQrSettings()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-xl">บันทึก QR Code</button>
-              <button onclick="clearQrImage()" class="px-3 py-2 bg-rose-100 text-rose-700 rounded-xl font-bold">ลบรูป QR</button>
+              <button onclick="saveQrSettings()"
+                class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-xl">บันทึก QR Code</button>
+              <button onclick="clearQrImage()" class="px-3 py-2 bg-rose-100 text-rose-700 rounded-xl font-bold">ลบรูป
+                QR</button>
             </div>
           </div>
           <div class="bg-white border p-4 rounded-xl flex flex-col items-center justify-center">
-            <div id="adminQrPreviewBox" class="w-40 h-40 border rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 p-2"></div>
+            <div id="adminQrPreviewBox"
+              class="w-40 h-40 border rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 p-2">
+            </div>
             <p id="adminQrTextPreview" class="text-xs font-semibold text-maroon-800 mt-2"></p>
           </div>
         </div>
       </div>
       <div class="p-3 bg-slate-100 border-t flex justify-between items-center shrink-0 safe-bottom">
-        <button onclick="resetDefaultCatalog()" class="text-xs text-rose-600 hover:underline">คืนค่าเมนูเริ่มต้น</button>
-        <button onclick="closeModal('adminModal')" class="bg-maroon-800 text-white font-bold px-5 py-2 rounded-xl text-xs">เสร็จสิ้น</button>
+        <button onclick="resetDefaultCatalog()"
+          class="text-xs text-rose-600 hover:underline">คืนค่าเมนูเริ่มต้น</button>
+        <button onclick="closeModal('adminModal')"
+          class="bg-maroon-800 text-white font-bold px-5 py-2 rounded-xl text-xs">เสร็จสิ้น</button>
       </div>
     </div>
   </div>
@@ -562,23 +857,29 @@
   <div id="configModal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-3 text-xs max-h-[95dvh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-sm text-maroon-800"><i class="fa-solid fa-link mr-1"></i>ตั้งค่าการเชื่อมต่อ Google Sheets</h3>
+        <h3 class="font-bold text-sm text-maroon-800"><i class="fa-solid fa-link mr-1"></i>ตั้งค่าการเชื่อมต่อ Google
+          Sheets</h3>
         <button onclick="closeModal('configModal')" class="w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
         <label class="block font-semibold mb-1">Web App URL (ลงท้ายด้วย /exec)</label>
-        <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border rounded-xl font-mono" />
+        <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec"
+          class="w-full px-3 py-2 border rounded-xl font-mono" />
       </div>
       <div>
         <label class="block font-semibold mb-1">Secret API Key</label>
         <input type="password" id="apiKeyInput" class="w-full px-3 py-2 border rounded-xl font-mono" />
       </div>
-      <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-[11px] text-emerald-900 leading-relaxed">
-        ✅ <b>ตั้งครั้งเดียวจบ:</b> ระบบจะจำลิงก์นี้ไว้ในเครื่อง + ฝังลงใน URL ของหน้านี้ (บุ๊กมาร์ก / เพิ่มลงหน้าจอโฮมแล้วใช้ได้เลย) และถ้าต้องการให้ทุกเครื่องเชื่อมอัตโนมัติ ให้วางลิงก์ที่บรรทัด <code>DEFAULT_GAS_URL</code> ในไฟล์ HTML ครั้งเดียว
+      <div
+        class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-[11px] text-emerald-900 leading-relaxed">
+        ✅ <b>ตั้งครั้งเดียวจบ:</b> ระบบจะจำลิงก์นี้ไว้ในเครื่อง + ฝังลงใน URL ของหน้านี้ (บุ๊กมาร์ก /
+        เพิ่มลงหน้าจอโฮมแล้วใช้ได้เลย) และถ้าต้องการให้ทุกเครื่องเชื่อมอัตโนมัติ ให้วางลิงก์ที่บรรทัด
+        <code>DEFAULT_GAS_URL</code> ในไฟล์ HTML ครั้งเดียว
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeModal('configModal')" class="px-4 py-2 rounded-xl border">ยกเลิก</button>
-        <button onclick="saveConfig()" class="px-5 py-2 rounded-xl bg-maroon-700 text-white font-bold">บันทึกและซิงค์</button>
+        <button onclick="saveConfig()"
+          class="px-5 py-2 rounded-xl bg-maroon-700 text-white font-bold">บันทึกและซิงค์</button>
       </div>
     </div>
   </div>
@@ -589,43 +890,45 @@
     //  วาง Web App URL (ลงท้าย /exec) ไว้ในเครื่องหมายคำพูดด้านล่างนี้ 1 ครั้ง
     //  แล้วทุกเครื่อง/ทุกเบราว์เซอร์ที่เปิดไฟล์นี้จะเชื่อมต่ออัตโนมัติ ไม่ต้องตั้งซ้ำ
     // =====================================================================
-    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycby0RHQBnqP9P7wzc8omuUN0odE87VXFGfRUcO1YfXhCxv3K1JZb9Ftc5GazvwgfoQQ/exec';
+    // เดิม:
+    const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwn5awCRxaM1tea6zdeHjcofbjHWp6cGpTV-HjdyVGQCEFLNwFChS_6jbXBssfBAAyL/exec';
     const DEFAULT_API_KEY = 'AFT-KHAI-POS-2026-SECRET';
+
 
     // ----- ตัวช่วยอ่านค่าเชื่อมต่อ (ลำดับ: URL param > localStorage > ค่าในไฟล์) -----
     function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-    function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
     function getGasUrl() { return (safeGet('AFT_GAS_URL') || DEFAULT_GAS_URL || '').trim(); }
     function getApiKey() { return (safeGet('AFT_GAS_KEY') || DEFAULT_API_KEY).trim(); }
 
-    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
 
     const DEFAULT_MENUS = [
-      { id:'M01', code:'101', name:'น้ำแข็งใส ถ้วยเล็ก (เลือกท็อปปิ้ง)', price:20, cat:'CUSTOM', custom:true, badge:'เลือกท็อปได้' },
-      { id:'M02', code:'102', name:'น้ำแข็งใส ถ้วยใหญ่ (เลือกท็อปปิ้ง)', price:30, cat:'CUSTOM', custom:true, badge:'จุใจขายดี' },
-      { id:'M03', code:'103', name:'น้ำแข็งใสรวมมิตรจัดเต็ม', price:40, cat:'SET', custom:false, badge:'Signature' },
-      { id:'M04', code:'104', name:'น้ำแข็งใสนมชมพู + ขนมปังกรอบ', price:30, cat:'SET', custom:false, badge:'ยอดฮิต' },
-      { id:'M05', code:'105', name:'น้ำแข็งใสบัวลอยไข่หวาน', price:35, cat:'SET', custom:false, badge:'ขวัญใจวัยรุ่น' },
-      { id:'M06', code:'106', name:'น้ำแข็งใสมะม่วงสุก + นมข้น', price:40, cat:'SET', custom:false, badge:'หอมหวาน' },
-      { id:'M07', code:'107', name:'น้ำแข็งใสช็อกโกแลต + มาร์ชแมลโลว์', price:35, cat:'SET', custom:false, badge:'แนะนำ' },
-      { id:'M08', code:'201', name:'เพิ่มท็อปปิ้ง 1 อย่าง', price:5, cat:'SET', custom:false, badge:'Add-on' },
-      { id:'D01', code:'301', name:'น้ำอัดลมเย็นเจี๊ยบ (แก้ว)', price:15, cat:'DRINK', custom:false, badge:'เครื่องดื่ม' },
-      { id:'D02', code:'302', name:'ชาไทย / ชามะนาว อวท.', price:20, cat:'DRINK', custom:false, badge:'ชงสด' },
-      { id:'D03', code:'303', name:'น้ำดื่มคริสตัล (ขวด)', price:10, cat:'DRINK', custom:false, badge:'เครื่องดื่ม' },
-      { id:'D04', code:'304', name:'ชาเขียวนมเย็น', price:25, cat:'DRINK', custom:false, badge:'ชงสด' }
+      { id: 'M01', code: '101', name: 'น้ำแข็งใส ถ้วยเล็ก (เลือกท็อปปิ้ง)', price: 20, cat: 'CUSTOM', custom: true, badge: 'เลือกท็อปได้' },
+      { id: 'M02', code: '102', name: 'น้ำแข็งใส ถ้วยใหญ่ (เลือกท็อปปิ้ง)', price: 30, cat: 'CUSTOM', custom: true, badge: 'จุใจขายดี' },
+      { id: 'M03', code: '103', name: 'น้ำแข็งใสรวมมิตรจัดเต็ม', price: 40, cat: 'SET', custom: false, badge: 'Signature' },
+      { id: 'M04', code: '104', name: 'น้ำแข็งใสนมชมพู + ขนมปังกรอบ', price: 30, cat: 'SET', custom: false, badge: 'ยอดฮิต' },
+      { id: 'M05', code: '105', name: 'น้ำแข็งใสบัวลอยไข่หวาน', price: 35, cat: 'SET', custom: false, badge: 'ขวัญใจวัยรุ่น' },
+      { id: 'M06', code: '106', name: 'น้ำแข็งใสมะม่วงสุก + นมข้น', price: 40, cat: 'SET', custom: false, badge: 'หอมหวาน' },
+      { id: 'M07', code: '107', name: 'น้ำแข็งใสช็อกโกแลต + มาร์ชแมลโลว์', price: 35, cat: 'SET', custom: false, badge: 'แนะนำ' },
+      { id: 'M08', code: '201', name: 'เพิ่มท็อปปิ้ง 1 อย่าง', price: 5, cat: 'SET', custom: false, badge: 'Add-on' },
+      { id: 'D01', code: '301', name: 'น้ำอัดลมเย็นเจี๊ยบ (แก้ว)', price: 15, cat: 'DRINK', custom: false, badge: 'เครื่องดื่ม' },
+      { id: 'D02', code: '302', name: 'ชาไทย / ชามะนาว อวท.', price: 20, cat: 'DRINK', custom: false, badge: 'ชงสด' },
+      { id: 'D03', code: '303', name: 'น้ำดื่มคริสตัล (ขวด)', price: 10, cat: 'DRINK', custom: false, badge: 'เครื่องดื่ม' },
+      { id: 'D04', code: '304', name: 'ชาเขียวนมเย็น', price: 25, cat: 'DRINK', custom: false, badge: 'ชงสด' }
     ];
 
     const DEFAULT_TOPPINGS = [
-      { name:'บัวลอย', price:5 }, { name:'ลูกชิด', price:5 }, { name:'เฉาก๊วย', price:5 },
-      { name:'ถั่วแดง', price:5 }, { name:'ข้าวโพด', price:5 }, { name:'วุ้นมะพร้าว', price:5 },
-      { name:'ขนมปังกรอบ', price:5 }, { name:'เยลลี่', price:5 }, { name:'ฟรุตสลัด', price:10 },
-      { name:'มาร์ชแมลโลว์', price:10 }, { name:'ไอศกรีมกะทิ', price:10 }, { name:'ไข่มุก', price:10 }
+      { name: 'บัวลอย', price: 5 }, { name: 'ลูกชิด', price: 5 }, { name: 'เฉาก๊วย', price: 5 },
+      { name: 'ถั่วแดง', price: 5 }, { name: 'ข้าวโพด', price: 5 }, { name: 'วุ้นมะพร้าว', price: 5 },
+      { name: 'ขนมปังกรอบ', price: 5 }, { name: 'เยลลี่', price: 5 }, { name: 'ฟรุตสลัด', price: 10 },
+      { name: 'มาร์ชแมลโลว์', price: 10 }, { name: 'ไอศกรีมกะทิ', price: 10 }, { name: 'ไข่มุก', price: 10 }
     ];
 
     // เมนูชุดใหม่ (น้ำแข็งใส): ล้างเมนูเก่าที่เคยบันทึกไว้ในเครื่องครั้งเดียว
     const MENU_VER = 'ice-v1';
     if (safeGet('AFT_MENU_VER') !== MENU_VER) {
-      try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) {}
+      try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) { }
       safeSet('AFT_MENU_VER', MENU_VER);
     }
 
@@ -687,7 +990,7 @@
         if (u.searchParams.get('gas') === gas) return;
         u.searchParams.set('gas', gas);
         history.replaceState(null, '', u.toString());
-      } catch (e) {}
+      } catch (e) { }
     }
 
     function showModal(id) { const el = document.getElementById(id); el.classList.remove('hidden'); el.classList.add('flex'); }
@@ -723,7 +1026,7 @@
         playBeep(880, 80);
         return;
       }
-      Swal.fire({ icon:'error', title:'รหัส PIN ไม่ถูกต้อง', text:'แคชเชียร์: 1234 | Admin: 9999', confirmButtonColor:'#6A0D25' });
+      Swal.fire({ icon: 'error', title: 'รหัส PIN ไม่ถูกต้อง', text: 'แคชเชียร์: 1234 | Admin: 9999', confirmButtonColor: '#6A0D25' });
       clearPin();
     }
 
@@ -742,10 +1045,10 @@
       const inp = document.getElementById('customerDisplayUrlInput');
       inp.select();
       try { navigator.clipboard.writeText(inp.value); } catch (e) { document.execCommand('copy'); }
-      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'คัดลอกลิงก์จอลูกค้าแล้ว!', showConfirmButton:false, timer:1800 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'คัดลอกลิงก์จอลูกค้าแล้ว!', showConfirmButton: false, timer: 1800 });
     }
     function openCustomerPopupWindow() { window.open(getGeneratedCustomerUrl(), 'CustDisplay', 'width=1000,height=680'); }
-    function pushTestQrToCustomerScreen() { broadcastCustomerState('PAY_QR'); Swal.fire({ toast:true, position:'top-end', icon:'info', title:'ยิง QR ไปจอลูกค้าแล้ว!', showConfirmButton:false, timer:1500 }); }
+    function pushTestQrToCustomerScreen() { broadcastCustomerState('PAY_QR'); Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'ยิง QR ไปจอลูกค้าแล้ว!', showConfirmButton: false, timer: 1500 }); }
 
     let syncTimer = null;
     function broadcastCustomerState(mode = 'ORDERING', extra = {}) {
@@ -772,7 +1075,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'UPDATE_DISPLAY', apiKey: getApiKey(), displayData: displayData })
-          }).catch(() => {});
+          }).catch(() => { });
         }, 200);
       }
     }
@@ -796,7 +1099,7 @@
           const res = await fetch(`${gasUrl}?action=GET_DISPLAY&t=${Date.now()}`);
           const json = await res.json();
           if (json && json.displayData && json.displayData.updatedAt > lastCustTs) renderCustomerScreenUI(json.displayData);
-        } catch (e) {}
+        } catch (e) { }
       }, 1500);
     }
 
@@ -882,13 +1185,13 @@
       if (!ts || Date.now() - ts > 12 * 3600 * 1000) return null;
       const st = getKStatusMap()[o.orderId] || 'PENDING';
       if (st === 'DONE') return null;
-      return { orderId:o.orderId, queueNo:o.queueNo, timestamp:o.timestamp, items:o.items || [], kitchenStatus:st, createdAt:ts };
+      return { orderId: o.orderId, queueNo: o.queueNo, timestamp: o.timestamp, items: o.items || [], kitchenStatus: st, createdAt: ts };
     }
     function setKitchenWarn(mode) {
       const el = document.getElementById('kitchenWarn'); if (!el) return;
       const msg = mode === 'legacy' ? '⚠️ ลิงก์ Apps Script นี้ยังไม่มีระบบครัว (ไม่ซิงค์ข้ามเครื่อง) — ' + kitchenErrMsg
-                : mode === 'error' ? '⚠️ Apps Script ผิดพลาด: ' + kitchenErrMsg
-                : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง ' + kitchenErrMsg : '';
+        : mode === 'error' ? '⚠️ Apps Script ผิดพลาด: ' + kitchenErrMsg
+          : mode === 'offline' ? '⚠️ เชื่อมต่อ Google Sheets ไม่ได้ — แสดงเฉพาะออเดอร์ในเครื่อง ' + kitchenErrMsg : '';
       el.textContent = msg; el.classList.toggle('hidden', !msg);
     }
 
@@ -914,11 +1217,13 @@
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action:'SET_KITCHEN_STATUS', apiKey:getApiKey(), orderId:id, status }) });
-        } catch (e) {}
+          await fetch(gasUrl, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'SET_KITCHEN_STATUS', apiKey: getApiKey(), orderId: id, status })
+          });
+        } catch (e) { }
       }
-      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'อัปเดตสถานะแล้ว', showConfirmButton:false, timer:1000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'อัปเดตสถานะแล้ว', showConfirmButton: false, timer: 1000 });
     }
 
     function getKitchenUrl() {
@@ -940,8 +1245,8 @@
       }).then(r => {
         if (r.isConfirmed) window.open(url, 'KitchenDisplay', 'width=1100,height=700');
         else if (r.isDenied) {
-          try { navigator.clipboard.writeText(url); } catch (e) {}
-          Swal.fire({ toast:true, position:'top-end', icon:'success', title:'คัดลอกลิงก์จอครัวแล้ว', showConfirmButton:false, timer:1500 });
+          try { navigator.clipboard.writeText(url); } catch (e) { }
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'คัดลอกลิงก์จอครัวแล้ว', showConfirmButton: false, timer: 1500 });
         }
       });
     }
@@ -949,7 +1254,7 @@
     // POS เรียกเมื่อบันทึกขึ้นคลาวด์ไม่ได้ (สำรองในเครื่อง)
     function pushOrderToKitchen(o) {
       const q = getLocalKitchen();
-      q.push({ orderId:o.orderId, queueNo:o.queueNo, timestamp:o.timestamp, items:o.items, kitchenStatus:'PENDING', createdAt:o.createdAt });
+      q.push({ orderId: o.orderId, queueNo: o.queueNo, timestamp: o.timestamp, items: o.items, kitchenStatus: 'PENDING', createdAt: o.createdAt });
       saveLocalKitchen(q);
       if (kitchenChannel) kitchenChannel.postMessage('refresh');
     }
@@ -992,7 +1297,7 @@
           const r = await fetch(`${gasUrl}?action=GET_KITCHEN&t=${Date.now()}`, { cache: 'no-store' });
           const txt = await r.text();
           let j = null;
-          try { j = JSON.parse(txt); } catch (pe) {}
+          try { j = JSON.parse(txt); } catch (pe) { }
           const tail = '…' + gasUrl.slice(-14);
           if (j && j.status === 'success' && Array.isArray(j.orders)) {
             list = j.orders; mode = 'cloud';
@@ -1081,28 +1386,34 @@
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action:'SET_KITCHEN_STATUS', apiKey:getApiKey(), orderId:id, status }) });
-        } catch (e) {}
+          await fetch(gasUrl, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'SET_KITCHEN_STATUS', apiKey: getApiKey(), orderId: id, status })
+          });
+        } catch (e) { }
       }
     }
 
     async function clearAllKitchen() {
       if (!kitchenOrders.length) return;
-      const c = await Swal.fire({ title:'เคลียร์ออเดอร์ทั้งหมด?', text:`มี ${kitchenOrders.length} ออเดอร์ค้างอยู่ (ประวัติการขายยังอยู่ครบ)`, icon:'warning',
-        showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'เคลียร์ทั้งหมด', cancelButtonText:'ยกเลิก' });
+      const c = await Swal.fire({
+        title: 'เคลียร์ออเดอร์ทั้งหมด?', text: `มี ${kitchenOrders.length} ออเดอร์ค้างอยู่ (ประวัติการขายยังอยู่ครบ)`, icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'เคลียร์ทั้งหมด', cancelButtonText: 'ยกเลิก'
+      });
       if (!c.isConfirmed) return;
       const km = getKStatusMap();
-      kitchenOrders.forEach(o => { kitchenOverride[o.orderId] = { status:'DONE', ts:Date.now() }; km[o.orderId] = 'DONE'; });
+      kitchenOrders.forEach(o => { kitchenOverride[o.orderId] = { status: 'DONE', ts: Date.now() }; km[o.orderId] = 'DONE'; });
       saveKStatusMap(km);
       saveLocalKitchen([]);
       kitchenOrders = []; renderKitchen();
       const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
-          await fetch(gasUrl, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action:'CLEAR_KITCHEN_ALL', apiKey:getApiKey() }) });
-        } catch (e) {}
+          await fetch(gasUrl, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'CLEAR_KITCHEN_ALL', apiKey: getApiKey() })
+          });
+        } catch (e) { }
       }
     }
 
@@ -1245,7 +1556,7 @@
       cart = []; renderCart(); updateHeldBadge(); broadcastCustomerState('ORDERING'); closeCartDrawer();
     }
     function recallHeldBill() {
-      if (!heldBills.length) return Swal.fire({ icon:'info', title:'ไม่มีบิลที่พักไว้', confirmButtonColor:'#6A0D25' });
+      if (!heldBills.length) return Swal.fire({ icon: 'info', title: 'ไม่มีบิลที่พักไว้', confirmButtonColor: '#6A0D25' });
       cart = heldBills.pop().items;
       safeSet('AFT_HELD_BILLS', JSON.stringify(heldBills));
       renderCart(); updateHeldBadge(); broadcastCustomerState('ORDERING');
@@ -1254,7 +1565,7 @@
 
     // --- Payment & Checkout ---
     function openPaymentModal(method) {
-      if (!cart.length) return Swal.fire({ toast:true, position:'top', icon:'warning', title:'กรุณาเลือกเมนูก่อนคิดเงิน', showConfirmButton:false, timer:1500 });
+      if (!cart.length) return Swal.fire({ toast: true, position: 'top', icon: 'warning', title: 'กรุณาเลือกเมนูก่อนคิดเงิน', showConfirmButton: false, timer: 1500 });
       const total = getCartTotal();
       cashReceivedAmount = total;
       document.getElementById('payModalTotal').textContent = `฿${total}`;
@@ -1294,7 +1605,7 @@
     async function submitOrderToGAS() {
       const total = getCartTotal();
       if (currentPaymentMethod === 'CASH' && cashReceivedAmount < total) {
-        return Swal.fire({ icon:'warning', title:'รับเงินมาไม่ครบ!', confirmButtonColor:'#6A0D25' });
+        return Swal.fire({ icon: 'warning', title: 'รับเงินมาไม่ครบ!', confirmButtonColor: '#6A0D25' });
       }
       const orderData = {
         action: 'SAVE_ORDER',
@@ -1330,11 +1641,13 @@
           if (resJson && resJson.status === 'success') {
             savedToCloud = true; cloudKitchen = !!resJson.version;
             if (!resJson.version) {
-              Swal.fire({ icon:'error', title:'ออเดอร์ไม่เข้าครัว: Apps Script เป็นโค้ดเก่า',
-                html:'บันทึกบิลลงชีตแล้ว แต่ลิงก์ <code>/exec</code> นี้ยังไม่ใช่ Code.gs เวอร์ชันใหม่ (v4.1)<br>วางโค้ดใหม่ แล้ว Deploy &gt; Manage deployments &gt; แก้ไข &gt; <b>New version</b>', confirmButtonColor:'#6A0D25' });
+              Swal.fire({
+                icon: 'error', title: 'ออเดอร์ไม่เข้าครัว: Apps Script เป็นโค้ดเก่า',
+                html: 'บันทึกบิลลงชีตแล้ว แต่ลิงก์ <code>/exec</code> นี้ยังไม่ใช่ Code.gs เวอร์ชันใหม่ (v4.1)<br>วางโค้ดใหม่ แล้ว Deploy &gt; Manage deployments &gt; แก้ไข &gt; <b>New version</b>', confirmButtonColor: '#6A0D25'
+              });
             }
           } else {
-            Swal.fire({ icon:'warning', title:'แจ้งเตือนจาก Google Sheets', text: (resJson && resJson.message) || 'บันทึกไม่สำเร็จ กรุณาเช็กการ Deploy เป็น New Version' });
+            Swal.fire({ icon: 'warning', title: 'แจ้งเตือนจาก Google Sheets', text: (resJson && resJson.message) || 'บันทึกไม่สำเร็จ กรุณาเช็กการ Deploy เป็น New Version' });
           }
         } catch (err) {
           console.warn('GAS Error:', err);
@@ -1362,9 +1675,9 @@
       openReceiptPreview(orderData);
 
       if (!gasUrl) {
-        Swal.fire({ toast:true, position:'bottom-end', icon:'warning', title:'บันทึกเฉพาะในเครื่อง (ยังไม่ได้ตั้งลิงก์ Google Sheets)', showConfirmButton:false, timer:3000 });
+        Swal.fire({ toast: true, position: 'bottom-end', icon: 'warning', title: 'บันทึกเฉพาะในเครื่อง (ยังไม่ได้ตั้งลิงก์ Google Sheets)', showConfirmButton: false, timer: 3000 });
       } else if (savedToCloud) {
-        Swal.fire({ toast:true, position:'bottom-end', icon:'success', title:'บันทึกลง Google Sheets สำเร็จ! ส่งเข้าครัวแล้ว', showConfirmButton:false, timer:2000 });
+        Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'บันทึกลง Google Sheets สำเร็จ! ส่งเข้าครัวแล้ว', showConfirmButton: false, timer: 2000 });
       }
 
       setTimeout(() => { if (!cart.length) broadcastCustomerState('ORDERING'); }, 5000);
@@ -1448,7 +1761,7 @@
             updateQueueBadge();
           }
           if (statusEl) statusEl.textContent = `✅ ซิงค์ตรงกับ Google Sheets แล้ว (${data.orders.length} บิล)`;
-          if (!silent) Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ซิงค์ข้อมูลแล้ว', showConfirmButton:false, timer:1500 });
+          if (!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ซิงค์ข้อมูลแล้ว', showConfirmButton: false, timer: 1500 });
         }
       } catch (err) {
         if (statusEl) statusEl.textContent = '⚠️ ดึงข้อมูลจาก Google Sheets ไม่ได้ (เช็กอินเทอร์เน็ต / การ Deploy)';
@@ -1468,7 +1781,7 @@
       });
       if (!confirm.isConfirmed) return;
 
-      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); localStorage.removeItem('AFT_KITCHEN_QUEUE'); } catch (e) {}
+      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); localStorage.removeItem('AFT_KITCHEN_QUEUE'); } catch (e) { }
       queueCounter = 1;
       safeSet('AFT_QUEUE_NO', '1');
       updateQueueBadge();
@@ -1482,9 +1795,9 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'CLEAR_ALL_ORDERS', apiKey: getApiKey() })
           });
-        } catch (e) {}
+        } catch (e) { }
       }
-      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ล้างประวัติเรียบร้อย!', showConfirmButton:false, timer:1800 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ล้างประวัติเรียบร้อย!', showConfirmButton: false, timer: 1800 });
     }
 
     function renderHistoryTable() {
@@ -1538,7 +1851,7 @@
         csv += `"${o.orderId}","${o.queueNo}","${o.timestamp}","${o.cashier}","${txt}","${o.paymentMethod}",${o.totalAmount}\n`;
       });
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       a.download = `ยอดขาย_น้ำแข็งใส_ไส่ไม่ยั้ง_อวท.csv`;
       a.click();
     }
@@ -1546,11 +1859,11 @@
     // --- Admin ---
     function openAdminModal() {
       if (currentRole !== 'ADMIN') {
-        Swal.fire({ title:'🔒 รหัส PIN Admin', input:'password', inputAttributes:{ inputmode:'numeric' }, showCancelButton:true, confirmButtonColor:'#6A0D25' }).then(r => {
+        Swal.fire({ title: '🔒 รหัส PIN Admin', input: 'password', inputAttributes: { inputmode: 'numeric' }, showCancelButton: true, confirmButtonColor: '#6A0D25' }).then(r => {
           if (r.isConfirmed && r.value === '9999') {
             currentRole = 'ADMIN'; document.getElementById('roleBadge').textContent = 'ADMIN';
             renderAdminMenuTable(); renderAdminToppingList(); renderQrDisplay(); showModal('adminModal');
-          } else if (r.isConfirmed) Swal.fire({ icon:'error', title:'รหัสไม่ถูกต้อง' });
+          } else if (r.isConfirmed) Swal.fire({ icon: 'error', title: 'รหัสไม่ถูกต้อง' });
         });
         return;
       }
@@ -1633,7 +1946,7 @@
     function editToppingItem(idx) { document.getElementById('editToppingIndex').value = idx; document.getElementById('inpToppingName').value = toppingList[idx].name; document.getElementById('inpToppingPrice').value = toppingList[idx].price; }
     function deleteToppingItem(idx) { toppingList.splice(idx, 1); safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); renderAdminToppingList(); }
     function resetToppingForm() { document.getElementById('editToppingIndex').value = '-1'; document.getElementById('inpToppingName').value = ''; document.getElementById('inpToppingPrice').value = ''; }
-    function resetDefaultCatalog() { try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) {} location.reload(); }
+    function resetDefaultCatalog() { try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) { } location.reload(); }
 
     function handleQrFileUpload(ev) {
       const file = ev.target.files[0];
@@ -1655,8 +1968,8 @@
       };
       reader.readAsDataURL(file);
     }
-    function saveQrSettings() { safeSet('AFT_QR_TEXT', document.getElementById('inpQrAccountText').value.trim()); renderQrDisplay(); broadcastCustomerState('ORDERING'); Swal.fire({ toast:true, position:'top-end', icon:'success', title:'บันทึก QR แล้ว', showConfirmButton:false, timer:1200 }); }
-    function clearQrImage() { try { localStorage.removeItem('AFT_QR_IMAGE'); } catch (e) {} renderQrDisplay(); broadcastCustomerState('ORDERING'); }
+    function saveQrSettings() { safeSet('AFT_QR_TEXT', document.getElementById('inpQrAccountText').value.trim()); renderQrDisplay(); broadcastCustomerState('ORDERING'); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึก QR แล้ว', showConfirmButton: false, timer: 1200 }); }
+    function clearQrImage() { try { localStorage.removeItem('AFT_QR_IMAGE'); } catch (e) { } renderQrDisplay(); broadcastCustomerState('ORDERING'); }
     function renderQrDisplay() {
       const img = safeGet('AFT_QR_IMAGE');
       const txt = safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ น้ำแข็งใส ไส่ไม่ยั้ง By อวท.';
@@ -1695,7 +2008,7 @@
       const url = document.getElementById('gasUrlInput').value.trim();
       const key = document.getElementById('apiKeyInput').value.trim();
       if (url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) {
-        return Swal.fire({ icon:'warning', title:'ลิงก์ไม่ถูกต้อง', text:'ต้องขึ้นต้นด้วย https://script.google.com/ และลงท้ายด้วย /exec', confirmButtonColor:'#6A0D25' });
+        return Swal.fire({ icon: 'warning', title: 'ลิงก์ไม่ถูกต้อง', text: 'ต้องขึ้นต้นด้วย https://script.google.com/ และลงท้ายด้วย /exec', confirmButtonColor: '#6A0D25' });
       }
       safeSet('AFT_GAS_URL', url);
       safeSet('AFT_GAS_KEY', key || DEFAULT_API_KEY);
@@ -1704,10 +2017,10 @@
       closeModal('configModal');
       if (url) {
         try {
-          const t = await (await fetch(`${url}?action=GET_KITCHEN&t=${Date.now()}`, { cache:'no-store' })).json();
-          if (t && t.status === 'success') Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ระบบครัวพร้อมใช้งาน (v' + (t.version || '?') + ')', showConfirmButton:false, timer:2500 });
-          else Swal.fire({ icon:'warning', title:'Apps Script ยังไม่มีระบบครัว', text:'ลิงก์นี้ยังเป็นเวอร์ชันเก่า: วาง Code.gs ใหม่ แล้ว Deploy > Manage deployments > แก้ไข > New version', confirmButtonColor:'#6A0D25' });
-        } catch (e) {}
+          const t = await (await fetch(`${url}?action=GET_KITCHEN&t=${Date.now()}`, { cache: 'no-store' })).json();
+          if (t && t.status === 'success') Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ระบบครัวพร้อมใช้งาน (v' + (t.version || '?') + ')', showConfirmButton: false, timer: 2500 });
+          else Swal.fire({ icon: 'warning', title: 'Apps Script ยังไม่มีระบบครัว', text: 'ลิงก์นี้ยังเป็นเวอร์ชันเก่า: วาง Code.gs ใหม่ แล้ว Deploy > Manage deployments > แก้ไข > New version', confirmButtonColor: '#6A0D25' });
+        } catch (e) { }
       }
       await syncOrdersFromGoogleSheet(false);
     }
@@ -1719,8 +2032,9 @@
         osc.frequency.value = freq; g.gain.value = 0.08;
         osc.connect(g); g.connect(ctx.destination);
         osc.start(); setTimeout(() => { osc.stop(); ctx.close(); }, dur);
-      } catch (e) {}
+      } catch (e) { }
     }
   </script>
 </body>
+
 </html>
