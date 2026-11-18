@@ -1317,7 +1317,7 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
 
       const gasUrl = getGasUrl();
-      let savedToCloud = false;
+      let savedToCloud = false, cloudKitchen = false;
 
       if (gasUrl) {
         try {
@@ -1328,7 +1328,11 @@
           });
           const resJson = await res.json();
           if (resJson && resJson.status === 'success') {
-            savedToCloud = true;
+            savedToCloud = true; cloudKitchen = !!resJson.version;
+            if (!resJson.version) {
+              Swal.fire({ icon:'error', title:'ออเดอร์ไม่เข้าครัว: Apps Script เป็นโค้ดเก่า',
+                html:'บันทึกบิลลงชีตแล้ว แต่ลิงก์ <code>/exec</code> นี้ยังไม่ใช่ Code.gs เวอร์ชันใหม่ (v4.1)<br>วางโค้ดใหม่ แล้ว Deploy &gt; Manage deployments &gt; แก้ไข &gt; <b>New version</b>', confirmButtonColor:'#6A0D25' });
+            }
           } else {
             Swal.fire({ icon:'warning', title:'แจ้งเตือนจาก Google Sheets', text: (resJson && resJson.message) || 'บันทึกไม่สำเร็จ กรุณาเช็กการ Deploy เป็น New Version' });
           }
@@ -1341,7 +1345,7 @@
       localOrders.unshift(orderData);
       safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
       // ส่งเข้าจอครัว (ถ้าขึ้นคลาวด์ไม่ได้ ใช้คิวในเครื่องแทน)
-      if (!savedToCloud) pushOrderToKitchen(orderData);
+      if (!savedToCloud || !cloudKitchen) pushOrderToKitchen(orderData);
       else if (kitchenChannel) kitchenChannel.postMessage('refresh');   // จอครัวเครื่องเดียวกันเด้งทันที
       renderHistoryTable();
 
