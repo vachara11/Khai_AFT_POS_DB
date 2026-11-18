@@ -898,7 +898,11 @@
     // ----- ตัวช่วยอ่านค่าเชื่อมต่อ (ลำดับ: URL param > localStorage > ค่าในไฟล์) -----
     function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
     function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
-    function getGasUrl() { return (safeGet('AFT_GAS_URL') || DEFAULT_GAS_URL || '').trim(); }
+    // เปลี่ยนเป็น:
+    function getGasUrl() {
+      // ถ้าในไฟล์ใส่ DEFAULT_GAS_URL ไว้ ให้ยึดค่านี้เป็นหลักเสมอ
+      return (DEFAULT_GAS_URL || safeGet('AFT_GAS_URL') || '').trim();
+    }
     function getApiKey() { return (safeGet('AFT_GAS_KEY') || DEFAULT_API_KEY).trim(); }
 
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
@@ -947,7 +951,12 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('gas')) safeSet('AFT_GAS_URL', urlParams.get('gas'));
+      // ถ้ามีค่า DEFAULT_GAS_URL ในไฟล์ ให้ลบค่า AFT_GAS_URL เก่าที่จำผิดทิ้ง และอัปเดตให้ตรงกัน
+      if (DEFAULT_GAS_URL) {
+        safeSet('AFT_GAS_URL', DEFAULT_GAS_URL);
+      } else {
+        if (urlParams.get('gas')) safeSet('AFT_GAS_URL', urlParams.get('gas'));
+      }
       if (urlParams.get('key')) safeSet('AFT_GAS_KEY', urlParams.get('key'));
       pinGasToUrl();
 
