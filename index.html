@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>POS ร้าน ไข่ (อวท.) V3.2 - ซิงค์ Google Sheets 100%</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>POS ร้าน ไข่ (อวท.) V3.5</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -14,7 +14,7 @@
       theme: {
         extend: {
           colors: {
-            maroon: { 50:'#fdf2f4', 100:'#fbe6ea', 600:'#8B1538', 700:'#6A0D25', 800:'#4E0719', 900:'#33030F', 950:'#1F0108' },
+            maroon: { 50:'#fdf2f4', 100:'#fbe6ea', 200:'#f5c2cc', 600:'#8B1538', 700:'#6A0D25', 800:'#4E0719', 900:'#33030F', 950:'#1F0108' },
             gold: { 400:'#FACC15', 500:'#D4AF37', 600:'#B59024' }
           },
           fontFamily: { sans: ['Kanit', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
@@ -23,62 +23,91 @@
     }
   </script>
   <style>
-    body { font-family: 'Kanit', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Kanit', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent;
+      height: 100vh; height: 100dvh; /* dvh = ความสูงจริงของมือถือ (ไม่โดนแถบ address bar บัง) */
+      overscroll-behavior: none; touch-action: manipulation;
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #8B1538; border-radius: 4px; }
     .pos-btn:active { transform: scale(0.96); }
+    input, select { font-size: 16px; } /* กัน iOS ซูมเองเวลาแตะช่องกรอก */
+    @media (min-width: 640px) { input, select { font-size: 14px; } }
+    .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+
+    /* ===== มือถือ/แท็บเล็ตแนวตั้ง: ตะกร้าเป็นลิ้นชักเลื่อนขึ้นจากด้านล่าง ===== */
+    #mobileBar { display: none; }
+    #cartBackdrop { display: none; }
+    @media (max-width: 1023px) {
+      #cartPanel {
+        position: fixed; left: 0; right: 0; bottom: 0; width: 100%;
+        height: 88vh; height: 88dvh; z-index: 30;
+        transform: translateY(105%); transition: transform .28s ease;
+        border-radius: 20px 20px 0 0; overflow: hidden;
+      }
+      #cartPanel.open { transform: translateY(0); }
+      #cartBackdrop.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 25; }
+      #mobileBar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: #fff;
+        border-top: 3px solid #D4AF37; box-shadow: 0 -4px 14px rgba(0,0,0,.15);
+      }
+      #menuGrid { padding-bottom: 84px; }
+    }
+
     @media print {
       body > *:not(#printContainer) { display: none !important; }
       #printContainer { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; padding: 4mm; background: #fff; color: #000; }
     }
   </style>
 </head>
-<body class="bg-slate-100 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-100 flex flex-col overflow-hidden">
 
   <div id="printContainer" class="hidden"></div>
 
-  <!-- ================= โหมดหน้าจอที่ 2: จอลูกค้า 7-Eleven (?screen=customer) ================= -->
-  <div id="customerScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col overflow-hidden">
-    <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-6 py-3 border-b-4 border-gold-500 flex items-center justify-between shadow-lg shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl bg-gold-500 text-maroon-950 flex items-center justify-center text-2xl font-extrabold shadow">
+  <!-- ================= จอลูกค้า (?screen=customer) ================= -->
+  <div id="customerScreenView" class="fixed inset-0 bg-maroon-950 text-white z-[60] hidden flex-col overflow-y-auto lg:overflow-hidden">
+    <div class="bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900 px-3 sm:px-6 py-2.5 border-b-4 border-gold-500 flex items-center justify-between gap-2 shadow-lg shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-gold-500 text-maroon-950 flex items-center justify-center text-xl font-extrabold shadow shrink-0">
           <i class="fa-solid fa-egg"></i>
         </div>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold text-white">ร้าน ไข่ (อวท.)</h1>
-            <span class="bg-emerald-500 text-maroon-950 text-xs font-extrabold px-2 py-0.5 rounded-full animate-pulse">7-DISPLAY</span>
+            <h1 class="text-base sm:text-xl font-bold text-white truncate">ร้าน ไข่ (อวท.)</h1>
+            <span class="bg-emerald-500 text-maroon-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse hidden sm:inline">7-DISPLAY</span>
           </div>
-          <p class="text-xs text-gold-400">ข้าวไข่เจียวทรงเครื่อง • วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</p>
+          <p class="text-[11px] text-gold-400 truncate">ข้าวไข่เจียวทรงเครื่อง • วิทยาลัยเทคโนโลยีพงษ์สวัสดิ์</p>
         </div>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 sm:gap-4 shrink-0">
         <div class="text-right">
-          <div class="text-[11px] text-maroon-200">หมายเลขคิว</div>
-          <div id="custQueueNo" class="text-2xl font-mono font-bold text-gold-400">A001</div>
+          <div class="text-[10px] text-maroon-200">หมายเลขคิว</div>
+          <div id="custQueueNo" class="text-xl sm:text-2xl font-mono font-bold text-gold-400">A001</div>
         </div>
-        <div id="custLiveClock" class="bg-black/40 border border-gold-500/40 px-3.5 py-1.5 rounded-xl font-mono text-lg text-gold-400">00:00:00</div>
+        <div id="custLiveClock" class="hidden sm:block bg-black/40 border border-gold-500/40 px-3 py-1.5 rounded-xl font-mono text-lg text-gold-400">00:00:00</div>
       </div>
     </div>
 
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden p-4 gap-4">
-      <div class="lg:col-span-7 bg-white text-slate-800 rounded-3xl shadow-2xl border-2 border-gold-500/60 flex flex-col overflow-hidden">
-        <div class="bg-maroon-800 text-white px-5 py-3 flex justify-between items-center">
-          <span class="font-bold text-base"><i class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการอาหารของคุณ</span>
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 lg:overflow-hidden p-3 sm:p-4 gap-3 sm:gap-4">
+      <div class="lg:col-span-7 bg-white text-slate-800 rounded-3xl shadow-2xl border-2 border-gold-500/60 flex flex-col overflow-hidden min-h-[55vh] lg:min-h-0">
+        <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center">
+          <span class="font-bold text-sm sm:text-base"><i class="fa-solid fa-basket-shopping text-gold-400 mr-2"></i>รายการอาหารของคุณ</span>
           <span class="text-xs bg-maroon-950/60 px-3 py-1 rounded-full text-gold-400">รวม <strong id="custTotalQty">0</strong> รายการ</span>
         </div>
-        <div id="custItemList" class="flex-1 overflow-y-auto divide-y divide-slate-200 p-4 space-y-2 bg-slate-50"></div>
-        <div class="bg-slate-900 text-white p-4 border-t-4 border-gold-500 flex items-center justify-between">
-          <div>
-            <div class="text-xs text-slate-400">ยอดรวมสุทธิ (TOTAL AMOUNT)</div>
-            <div id="custStatusBadge" class="text-sm font-bold text-emerald-400">พร้อมรับออเดอร์...</div>
+        <div id="custItemList" class="flex-1 overflow-y-auto divide-y divide-slate-200 p-3 space-y-2 bg-slate-50"></div>
+        <div class="bg-slate-900 text-white p-3 sm:p-4 border-t-4 border-gold-500 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs text-slate-400">ยอดรวมสุทธิ</div>
+            <div id="custStatusBadge" class="text-xs sm:text-sm font-bold text-emerald-400">พร้อมรับออเดอร์...</div>
           </div>
-          <div id="custTotalPrice" class="text-4xl font-mono font-extrabold text-gold-400">฿0.00</div>
+          <div id="custTotalPrice" class="text-3xl sm:text-4xl font-mono font-extrabold text-gold-400">฿0.00</div>
         </div>
       </div>
 
-      <div class="lg:col-span-5 bg-gradient-to-b from-maroon-900 to-maroon-950 rounded-3xl shadow-2xl border-2 border-gold-500/60 p-6 flex flex-col items-center justify-center text-center">
+      <div class="lg:col-span-5 bg-gradient-to-b from-maroon-900 to-maroon-950 rounded-3xl shadow-2xl border-2 border-gold-500/60 p-5 flex flex-col items-center justify-center text-center">
         <div id="custRightWelcome" class="space-y-3 max-w-xs">
           <div class="w-20 h-20 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto">
             <i class="fa-solid fa-utensils text-4xl text-gold-400"></i>
@@ -89,7 +118,7 @@
 
         <div id="custRightQrPay" class="hidden w-full flex-col items-center justify-center space-y-3">
           <span class="bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-bounce">📱 กรุณาสแกน QR Code เพื่อชำระเงิน</span>
-          <div id="custQrBox" class="w-56 h-56 bg-white p-2.5 rounded-2xl shadow-2xl border-4 border-gold-400 flex items-center justify-center overflow-hidden"></div>
+          <div id="custQrBox" class="w-56 h-56 max-w-[70vw] max-h-[70vw] bg-white p-2.5 rounded-2xl shadow-2xl border-4 border-gold-400 flex items-center justify-center overflow-hidden"></div>
           <div id="custQrAccountName" class="text-sm font-bold text-gold-400"></div>
           <div class="bg-black/40 border border-gold-500/40 px-5 py-2 rounded-2xl">
             <div class="text-xs text-slate-300">ยอดโอนชำระ</div>
@@ -112,19 +141,19 @@
     </div>
   </div>
 
-  <!-- ================= 1. หน้าจอล็อกอินด้วย PIN ================= -->
-  <div id="pinLockModal" class="fixed inset-0 bg-maroon-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-gold-500">
-      <div class="bg-gradient-to-r from-maroon-800 to-maroon-600 p-4 text-center text-white">
-        <div class="w-14 h-14 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto mb-1">
-          <i class="fa-solid fa-egg text-2xl text-gold-400"></i>
+  <!-- ================= 1. ล็อกอิน PIN ================= -->
+  <div id="pinLockModal" class="fixed inset-0 bg-maroon-900/95 backdrop-blur-md z-50 flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-gold-500 my-auto">
+      <div class="bg-gradient-to-r from-maroon-800 to-maroon-600 p-3 text-center text-white">
+        <div class="w-12 h-12 rounded-full bg-gold-500/20 border-2 border-gold-400 flex items-center justify-center mx-auto mb-1">
+          <i class="fa-solid fa-egg text-xl text-gold-400"></i>
         </div>
-        <h2 class="text-lg font-bold">ร้าน ไข่ (อวท.) POS V3.2</h2>
+        <h2 class="text-lg font-bold">ร้าน ไข่ (อวท.) POS V3.5</h2>
         <p class="text-xs text-gold-400">PIN แคชเชียร์: 1234 | PIN Admin: 9999</p>
       </div>
-      <div class="p-5">
+      <div class="p-4">
         <input type="password" id="pinDisplay" readonly placeholder="••••"
-          class="w-full text-center text-2xl font-mono tracking-[0.6em] py-2.5 mb-3 bg-slate-100 border-2 border-slate-300 rounded-xl text-maroon-800 font-bold" />
+          class="w-full text-center text-2xl font-mono tracking-[0.6em] py-2 mb-3 bg-slate-100 border-2 border-slate-300 rounded-xl text-maroon-800 font-bold" />
         <div class="grid grid-cols-3 gap-2.5">
           <button onclick="pressPin('1')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">1</button>
           <button onclick="pressPin('2')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">2</button>
@@ -139,7 +168,7 @@
           <button onclick="pressPin('0')" class="pos-btn py-3 bg-slate-100 hover:bg-maroon-50 rounded-xl text-xl font-bold border">0</button>
           <button onclick="submitPin()" class="pos-btn py-3 bg-maroon-700 text-white rounded-xl text-sm font-bold shadow">ตกลง</button>
         </div>
-        <div class="mt-3 flex flex-col gap-1 text-center">
+        <div class="mt-3 flex flex-col gap-1.5 text-center">
           <button onclick="openConfigModal()" class="text-xs text-slate-500 hover:text-maroon-700 underline"><i class="fa-solid fa-gear mr-1"></i>ตั้งค่าลิงก์ Google Apps Script</button>
           <button onclick="switchToCustomerDisplayMode()" class="text-xs text-emerald-700 font-semibold hover:underline"><i class="fa-solid fa-tv mr-1"></i>เปิดเครื่องนี้เป็น "จอฝั่งลูกค้า (7-Display)"</button>
         </div>
@@ -147,88 +176,95 @@
     </div>
   </div>
 
-  <!-- ================= 2. แถบด้านบน Header ================= -->
-  <header class="bg-gradient-to-r from-maroon-900 via-maroon-700 to-maroon-800 text-white px-4 py-2 shadow-md flex flex-wrap items-center justify-between gap-2 border-b-2 border-gold-500 shrink-0">
-    <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 rounded-xl bg-gold-500 text-maroon-900 flex items-center justify-center font-extrabold text-lg shadow">
+  <!-- ================= 2. Header ================= -->
+  <header class="bg-gradient-to-r from-maroon-900 via-maroon-700 to-maroon-800 text-white px-2.5 sm:px-4 py-2 shadow-md flex items-center justify-between gap-2 border-b-2 border-gold-500 shrink-0">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-9 h-9 rounded-xl bg-gold-500 text-maroon-900 flex items-center justify-center font-extrabold text-lg shadow shrink-0">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="font-bold text-base sm:text-lg leading-tight">ร้าน ไข่ (อวท.)</h1>
-          <span id="roleBadge" class="bg-gold-500 text-maroon-950 text-[10px] font-bold px-2 py-0.5 rounded-full">CASHIER</span>
-          <span id="dbStatusBadge" onclick="openConfigModal()" class="cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-2 py-0.5 rounded-full">โหมดในเครื่อง</span>
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5">
+          <h1 class="font-bold text-sm sm:text-lg leading-tight truncate">ร้าน ไข่ (อวท.)</h1>
+          <span id="roleBadge" class="bg-gold-500 text-maroon-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">CASHIER</span>
         </div>
-        <p id="cashierNameDisplay" class="text-[11px] text-maroon-100">แคชเชียร์ อวท. 1</p>
+        <div class="flex items-center gap-1.5">
+          <span id="dbStatusBadge" onclick="openConfigModal()" class="cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap">โหมดในเครื่อง</span>
+          <p id="cashierNameDisplay" class="text-[11px] text-maroon-100 truncate hidden sm:block">แคชเชียร์ อวท. 1</p>
+        </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-1.5 text-xs flex-wrap">
-      <div class="bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400" id="liveClock">00:00:00</div>
-      <button onclick="openCustomerLinkModal()" class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg shadow flex items-center gap-1">
-        <i class="fa-solid fa-tv"></i><span>จอลูกค้า</span>
+    <div class="flex items-center gap-1 sm:gap-1.5 text-xs shrink-0">
+      <div class="hidden md:block bg-maroon-950/60 px-2.5 py-1.5 rounded-lg border border-maroon-600 font-mono text-gold-400" id="liveClock">00:00:00</div>
+      <button onclick="openCustomerLinkModal()" class="pos-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="จอลูกค้า">
+        <i class="fa-solid fa-tv"></i><span class="hidden sm:inline">จอลูกค้า</span>
       </button>
-      <button onclick="recallHeldBill()" class="pos-btn bg-amber-500 hover:bg-amber-400 text-maroon-950 font-bold px-2.5 py-1.5 rounded-lg shadow flex items-center gap-1">
-        <i class="fa-solid fa-pause"></i><span>บิลพัก</span>
-        <span id="heldCountBadge" class="bg-maroon-900 text-white text-[10px] px-1.5 rounded-full">0</span>
+      <button onclick="recallHeldBill()" class="pos-btn relative bg-amber-500 hover:bg-amber-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="บิลพัก">
+        <i class="fa-solid fa-pause"></i><span class="hidden sm:inline">บิลพัก</span>
+        <span id="heldCountBadge" class="bg-maroon-900 text-white text-[10px] px-1.5 rounded-full absolute -top-1 -right-1 sm:static">0</span>
       </button>
-      <button onclick="openHistoryModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-white/20">
-        <i class="fa-solid fa-receipt text-gold-400"></i><span>ประวัติ/ใบเสร็จ</span>
+      <button onclick="openHistoryModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white font-semibold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg flex items-center justify-center gap-1 border border-white/20" title="ประวัติ/ใบเสร็จ">
+        <i class="fa-solid fa-receipt text-gold-400"></i><span class="hidden lg:inline">ประวัติ/ใบเสร็จ</span>
       </button>
-      <button onclick="openAdminModal()" class="pos-btn bg-gold-500 hover:bg-gold-400 text-maroon-950 font-bold px-2.5 py-1.5 rounded-lg shadow flex items-center gap-1">
-        <i class="fa-solid fa-sliders"></i><span>Admin</span>
+      <button onclick="openAdminModal()" class="pos-btn bg-gold-500 hover:bg-gold-400 text-maroon-950 font-bold w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg shadow flex items-center justify-center gap-1" title="Admin">
+        <i class="fa-solid fa-sliders"></i><span class="hidden sm:inline">Admin</span>
       </button>
-      <button onclick="openConfigModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-lg" title="ตั้งค่าเชื่อมต่อ Google Sheets"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-      <button onclick="lockPosScreen()" class="pos-btn bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1.5 rounded-lg" title="ล็อกหน้าจอ"><i class="fa-solid fa-lock"></i></button>
+      <button onclick="openConfigModal()" class="pos-btn bg-white/15 hover:bg-white/25 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg" title="ตั้งค่า Google Sheets"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+      <button onclick="lockPosScreen()" class="pos-btn bg-rose-600 hover:bg-rose-500 text-white w-9 h-9 sm:w-auto sm:px-2.5 sm:py-1.5 rounded-lg" title="ล็อกหน้าจอ"><i class="fa-solid fa-lock"></i></button>
     </div>
   </header>
 
   <!-- ================= 3. พื้นที่ทำงานหลัก ================= -->
-  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
-    <section class="flex-1 flex flex-col overflow-hidden bg-slate-100 p-3">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 shrink-0">
-        <div class="flex gap-1.5 overflow-x-auto pb-1">
-          <button onclick="filterCategory('ALL')" data-cat="ALL" class="cat-btn bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">ทั้งหมด</button>
-          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍳 ข้าวไข่เจียวเลือกท็อปปิ้ง</button>
-          <button onclick="filterCategory('SET')" data-cat="SET" class="cat-btn bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍛 เมนูฮิตขายดี</button>
-          <button onclick="filterCategory('DRINK')" data-cat="DRINK" class="cat-btn bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤 เครื่องดื่ม/ซุป</button>
+  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+    <section class="flex-1 flex flex-col overflow-hidden bg-slate-100 p-2.5 sm:p-3 min-h-0">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5 shrink-0">
+        <div class="flex gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5">
+          <button onclick="filterCategory('ALL')" data-cat="ALL" class="cat-btn whitespace-nowrap bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">ทั้งหมด</button>
+          <button onclick="filterCategory('CUSTOM')" data-cat="CUSTOM" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍳 เลือกท็อปปิ้ง</button>
+          <button onclick="filterCategory('SET')" data-cat="SET" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🍛 เมนูฮิตขายดี</button>
+          <button onclick="filterCategory('DRINK')" data-cat="DRINK" class="cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border">🥤 เครื่องดื่ม/ซุป</button>
         </div>
-        <div class="relative w-full sm:w-52">
-          <i class="fa-solid fa-barcode absolute left-3 top-2 text-slate-400"></i>
+        <div class="relative w-full sm:w-52 shrink-0">
+          <i class="fa-solid fa-barcode absolute left-3 top-2.5 text-slate-400"></i>
           <input type="text" id="searchInput" oninput="renderMenuGrid()" placeholder="ค้นหาเมนู / รหัส..."
-            class="w-full pl-8 pr-3 py-1 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-maroon-600" />
+            class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-maroon-600" />
         </div>
       </div>
-      <div id="menuGrid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 content-start pr-1"></div>
+      <div id="menuGrid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2.5 content-start pr-0.5 min-h-0"></div>
     </section>
 
-    <aside class="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shrink-0 h-[48vh] lg:h-auto shadow-xl">
-      <div class="bg-slate-900 text-white p-3 border-b-4 border-gold-500 flex items-center justify-between shrink-0">
-        <div>
-          <span class="text-xs text-slate-400 font-mono">QUEUE # <strong id="queueDisplay" class="text-gold-400 text-sm">A001</strong></span>
-          <p id="lastActionDisplay" class="text-xs text-emerald-400 truncate max-w-[180px]">พร้อมรับออเดอร์...</p>
+    <div id="cartBackdrop" onclick="closeCartDrawer()"></div>
+
+    <aside id="cartPanel" class="w-full lg:w-[400px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shrink-0 lg:h-auto shadow-xl min-h-0">
+      <div class="bg-slate-900 text-white p-3 border-b-4 border-gold-500 flex items-center justify-between shrink-0 gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <button onclick="closeCartDrawer()" class="lg:hidden w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-chevron-down"></i></button>
+          <div class="min-w-0">
+            <span class="text-xs text-slate-400 font-mono">QUEUE # <strong id="queueDisplay" class="text-gold-400 text-sm">A001</strong></span>
+            <p id="lastActionDisplay" class="text-xs text-emerald-400 truncate max-w-[170px]">พร้อมรับออเดอร์...</p>
+          </div>
         </div>
-        <div class="text-right">
+        <div class="text-right shrink-0">
           <div class="text-[10px] text-slate-400">ยอดสุทธิ (บาท)</div>
-          <div id="bigTotalDisplay" class="text-3xl font-mono font-bold text-gold-400 leading-none">฿0.00</div>
+          <div id="bigTotalDisplay" class="text-2xl sm:text-3xl font-mono font-bold text-gold-400 leading-none">฿0.00</div>
         </div>
       </div>
 
-      <div id="cartList" class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 bg-slate-50"></div>
+      <div id="cartList" class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 bg-slate-50 min-h-0"></div>
 
-      <div class="p-3 bg-white border-t border-slate-200 space-y-2 shrink-0">
+      <div class="p-3 bg-white border-t border-slate-200 space-y-2 shrink-0 safe-bottom">
         <div class="flex justify-between items-center text-xs text-slate-600">
           <span>รวม: <strong id="totalQtyDisplay" class="text-maroon-800">0</strong> รายการ</span>
-          <div class="flex gap-3">
+          <div class="flex gap-4">
             <button onclick="holdCurrentBill()" class="text-amber-700 hover:underline font-semibold"><i class="fa-solid fa-pause mr-1"></i>พักบิล</button>
             <button onclick="clearCart()" class="text-rose-600 hover:underline font-semibold"><i class="fa-solid fa-trash-can mr-1"></i>ล้างตะกร้า</button>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="openPaymentModal('QR')" class="pos-btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5 text-sm">
+          <button onclick="openPaymentModal('QR')" class="pos-btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-1.5 text-sm">
             <i class="fa-solid fa-qrcode"></i> สแกนจ่าย QR
           </button>
-          <button onclick="openPaymentModal('CASH')" class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 text-sm border border-gold-500/40">
+          <button onclick="openPaymentModal('CASH')" class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-1.5 text-sm border border-gold-500/40">
             <i class="fa-solid fa-cash-register text-gold-400"></i> รับเงินสด
           </button>
         </div>
@@ -236,56 +272,67 @@
     </aside>
   </main>
 
-  <!-- ================= Modal คัดลอกลิงก์หน้าจอลูกค้า ================= -->
+  <!-- แถบสรุปตะกร้าด้านล่าง (เฉพาะมือถือ) -->
+  <div id="mobileBar" class="items-center justify-between gap-3">
+    <div>
+      <div class="text-[11px] text-slate-500 leading-none"><span id="mobileQty">0</span> รายการ</div>
+      <div id="mobileTotal" class="text-2xl font-mono font-bold text-maroon-700 leading-tight">฿0.00</div>
+    </div>
+    <button onclick="openCartDrawer()" class="pos-btn bg-gradient-to-r from-maroon-700 to-maroon-600 text-white font-bold px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm border border-gold-500/40">
+      <i class="fa-solid fa-basket-shopping text-gold-400"></i> ดูตะกร้า / ชำระเงิน
+    </button>
+  </div>
+
+  <!-- ================= Modal ลิงก์จอลูกค้า ================= -->
   <div id="customerLinkModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border-2 border-emerald-600">
-      <div class="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-5 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-base"><i class="fa-solid fa-tv text-gold-400 mr-2"></i>ลิงก์หน้าจอลูกค้า (7-Eleven Display)</h3>
+      <div class="bg-gradient-to-r from-emerald-800 to-emerald-600 text-white px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-tv text-gold-400 mr-2"></i>ลิงก์หน้าจอลูกค้า</h3>
         <button onclick="closeModal('customerLinkModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-sm">
-        <label class="block text-xs font-bold text-slate-600">คัดลอกลิงก์นี้ไปเปิดบนแท็บเล็ต/มือถืออีกเครื่องเพื่อหันหน้าให้ลูกค้าดูและสแกนจ่ายเงิน:</label>
+        <label class="block text-xs font-bold text-slate-600">คัดลอกลิงก์นี้ไปเปิดบนแท็บเล็ต/มือถืออีกเครื่อง (ลิงก์นี้มีการเชื่อม Google Sheets ติดไปด้วย ไม่ต้องตั้งค่าซ้ำ):</label>
         <div class="flex gap-2">
-          <input type="text" id="customerDisplayUrlInput" readonly class="flex-1 px-3 py-2 bg-slate-100 border rounded-xl font-mono text-xs" />
-          <button onclick="copyCustomerDisplayUrl()" class="pos-btn bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow shrink-0"><i class="fa-solid fa-copy mr-1"></i>คัดลอกลิงก์</button>
+          <input type="text" id="customerDisplayUrlInput" readonly class="flex-1 min-w-0 px-3 py-2 bg-slate-100 border rounded-xl font-mono text-xs" />
+          <button onclick="copyCustomerDisplayUrl()" class="pos-btn bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow shrink-0"><i class="fa-solid fa-copy mr-1"></i>คัดลอก</button>
         </div>
-        <div class="grid grid-cols-2 gap-2 pt-2">
-          <button onclick="openCustomerPopupWindow()" class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-up-right-from-square mr-1"></i>เปิดจอลูกค้าในหน้าต่างใหม่</button>
-          <button onclick="pushTestQrToCustomerScreen()" class="pos-btn bg-sky-600 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-qrcode mr-1"></i>ทดสอบส่ง QR ไปจอลูกค้า</button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <button onclick="openCustomerPopupWindow()" class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-up-right-from-square mr-1"></i>เปิดในหน้าต่างใหม่</button>
+          <button onclick="pushTestQrToCustomerScreen()" class="pos-btn bg-sky-600 text-white font-bold py-2.5 rounded-xl text-xs shadow"><i class="fa-solid fa-qrcode mr-1"></i>ทดสอบส่ง QR</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ================= Modal เลือกท็อปปิ้ง ================= -->
-  <div id="toppingModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-maroon-200 flex flex-col max-h-[90vh]">
-      <div class="bg-maroon-800 text-white px-5 py-3 flex justify-between items-center">
-        <div>
-          <h3 id="modalBaseTitle" class="font-bold text-base">เลือกท็อปปิ้งข้าวไข่เจียว</h3>
-          <p class="text-xs text-gold-400">คลิกเลือกเครื่องเคียงที่ต้องการเพิ่มได้เลย</p>
+  <!-- ================= Modal ท็อปปิ้ง ================= -->
+  <div id="toppingModal" class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-maroon-200 flex flex-col max-h-[92vh] max-h-[92dvh]">
+      <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
+        <div class="min-w-0">
+          <h3 id="modalBaseTitle" class="font-bold text-sm sm:text-base truncate">เลือกท็อปปิ้งข้าวไข่เจียว</h3>
+          <p class="text-xs text-gold-400">แตะเลือกเครื่องเคียงที่ต้องการเพิ่ม</p>
         </div>
-        <button onclick="closeModal('toppingModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('toppingModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 overflow-y-auto space-y-3">
+      <div class="p-3 sm:p-4 overflow-y-auto space-y-3 min-h-0">
         <div id="toppingOptionsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         <div class="pt-2 border-t">
           <label class="block text-xs font-bold text-slate-500 mb-1.5">ตัวเลือกพิเศษ (ฟรี)</label>
           <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="toggleNote(this, 'กรอบๆ')" class="note-chip px-3 py-1 rounded-full text-xs border">🔥 ทอดกรอบๆ</button>
-            <button type="button" onclick="toggleNote(this, 'ไข่ข้นนุ่มๆ')" class="note-chip px-3 py-1 rounded-full text-xs border">🍳 ไข่ข้นนุ่มๆ</button>
-            <button type="button" onclick="toggleNote(this, 'น้ำมันน้อย')" class="note-chip px-3 py-1 rounded-full text-xs border">🥗 น้ำมันน้อย</button>
-            <button type="button" onclick="toggleNote(this, 'ใส่พริกสด')" class="note-chip px-3 py-1 rounded-full text-xs border">🌶️ ใส่พริกสด</button>
-            <button type="button" onclick="toggleNote(this, 'ใส่กล่อง')" class="note-chip px-3 py-1 rounded-full text-xs border">📦 ใส่กล่อง</button>
+            <button type="button" onclick="toggleNote(this, 'กรอบๆ')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🔥 ทอดกรอบๆ</button>
+            <button type="button" onclick="toggleNote(this, 'ไข่ข้นนุ่มๆ')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🍳 ไข่ข้นนุ่มๆ</button>
+            <button type="button" onclick="toggleNote(this, 'น้ำมันน้อย')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🥗 น้ำมันน้อย</button>
+            <button type="button" onclick="toggleNote(this, 'ใส่พริกสด')" class="note-chip px-3 py-1.5 rounded-full text-xs border">🌶️ ใส่พริกสด</button>
+            <button type="button" onclick="toggleNote(this, 'ใส่กล่อง')" class="note-chip px-3 py-1.5 rounded-full text-xs border">📦 ใส่กล่อง</button>
           </div>
         </div>
       </div>
-      <div class="p-3.5 bg-slate-50 border-t flex items-center justify-between">
+      <div class="p-3 bg-slate-50 border-t flex items-center justify-between shrink-0 safe-bottom">
         <div>
           <span class="text-xs text-slate-500">ราคาต่อจาน</span>
           <div id="customPricePreview" class="text-2xl font-mono font-bold text-maroon-700">฿25</div>
         </div>
-        <button onclick="confirmCustomOmelet()" class="pos-btn bg-maroon-700 text-white font-bold px-5 py-2.5 rounded-xl shadow flex items-center gap-2 text-sm">
+        <button onclick="confirmCustomOmelet()" class="pos-btn bg-maroon-700 text-white font-bold px-5 py-3 rounded-xl shadow flex items-center gap-2 text-sm">
           <i class="fa-solid fa-plus-circle text-gold-400"></i> เพิ่มลงตะกร้า
         </button>
       </div>
@@ -293,35 +340,35 @@
   </div>
 
   <!-- ================= Modal ชำระเงิน ================= -->
-  <div id="paymentModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col max-h-[95vh]">
-      <div class="bg-maroon-800 text-white px-5 py-3 flex justify-between items-center">
-        <h3 class="font-bold text-base"><i class="fa-solid fa-cash-register text-gold-400 mr-2"></i>ชำระเงิน (ซิงค์จอลูกค้าอัตโนมัติ)</h3>
-        <button onclick="closePaymentModal()" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+  <div id="paymentModal" class="fixed inset-0 bg-black/60 z-40 hidden items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col max-h-[95vh] max-h-[95dvh]">
+      <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-cash-register text-gold-400 mr-2"></i>ชำระเงิน</h3>
+        <button onclick="closePaymentModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 space-y-3 overflow-y-auto">
+      <div class="p-3 sm:p-4 space-y-3 overflow-y-auto min-h-0 safe-bottom">
         <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-          <button id="tabCashBtn" onclick="switchPayMethod('CASH')" class="py-2 rounded-lg font-bold text-xs sm:text-sm bg-maroon-700 text-white">💵 เงินสด (Cash)</button>
-          <button id="tabQrBtn" onclick="switchPayMethod('QR')" class="py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-600">📱 สแกน QR ชำระเงิน</button>
+          <button id="tabCashBtn" onclick="switchPayMethod('CASH')" class="py-2 rounded-lg font-bold text-xs sm:text-sm bg-maroon-700 text-white">💵 เงินสด</button>
+          <button id="tabQrBtn" onclick="switchPayMethod('QR')" class="py-2 rounded-lg font-bold text-xs sm:text-sm text-slate-600">📱 สแกน QR</button>
         </div>
         <div class="grid grid-cols-3 gap-2 bg-slate-900 text-white p-3 rounded-xl text-center font-mono">
-          <div><div class="text-[10px] text-slate-400 font-sans">ยอดชำระ</div><div id="payModalTotal" class="text-lg font-bold text-gold-400">0</div></div>
-          <div class="border-x border-slate-700"><div class="text-[10px] text-slate-400 font-sans">รับเงินมา</div><div id="payModalReceived" class="text-lg font-bold text-emerald-400">0</div></div>
-          <div><div class="text-[10px] text-slate-400 font-sans">เงินทอน</div><div id="payModalChange" class="text-lg font-bold text-amber-300">0</div></div>
+          <div><div class="text-[10px] text-slate-400 font-sans">ยอดชำระ</div><div id="payModalTotal" class="text-base sm:text-lg font-bold text-gold-400">0</div></div>
+          <div class="border-x border-slate-700"><div class="text-[10px] text-slate-400 font-sans">รับเงินมา</div><div id="payModalReceived" class="text-base sm:text-lg font-bold text-emerald-400">0</div></div>
+          <div><div class="text-[10px] text-slate-400 font-sans">เงินทอน</div><div id="payModalChange" class="text-base sm:text-lg font-bold text-amber-300">0</div></div>
         </div>
 
         <div id="cashInputSection" class="space-y-2.5">
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="setExactCash()" class="pos-btn bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs">รับพอดี</button>
-            <button onclick="addCashBanknote(20)" class="pos-btn bg-emerald-50 text-emerald-900 font-mono font-bold py-2 rounded-xl border border-emerald-300">+฿20</button>
-            <button onclick="addCashBanknote(50)" class="pos-btn bg-sky-50 text-sky-900 font-mono font-bold py-2 rounded-xl border border-sky-300">+฿50</button>
-            <button onclick="addCashBanknote(100)" class="pos-btn bg-rose-50 text-rose-900 font-mono font-bold py-2 rounded-xl border border-rose-300">+฿100</button>
-            <button onclick="addCashBanknote(500)" class="pos-btn bg-purple-50 text-purple-900 font-mono font-bold py-2 rounded-xl border border-purple-300">+฿500</button>
-            <button onclick="addCashBanknote(1000)" class="pos-btn bg-slate-100 text-slate-900 font-mono font-bold py-2 rounded-xl border border-slate-300">+฿1000</button>
+            <button onclick="setExactCash()" class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs">รับพอดี</button>
+            <button onclick="addCashBanknote(20)" class="pos-btn bg-emerald-50 text-emerald-900 font-mono font-bold py-2.5 rounded-xl border border-emerald-300">+฿20</button>
+            <button onclick="addCashBanknote(50)" class="pos-btn bg-sky-50 text-sky-900 font-mono font-bold py-2.5 rounded-xl border border-sky-300">+฿50</button>
+            <button onclick="addCashBanknote(100)" class="pos-btn bg-rose-50 text-rose-900 font-mono font-bold py-2.5 rounded-xl border border-rose-300">+฿100</button>
+            <button onclick="addCashBanknote(500)" class="pos-btn bg-purple-50 text-purple-900 font-mono font-bold py-2.5 rounded-xl border border-purple-300">+฿500</button>
+            <button onclick="addCashBanknote(1000)" class="pos-btn bg-slate-100 text-slate-900 font-mono font-bold py-2.5 rounded-xl border border-slate-300">+฿1000</button>
           </div>
           <div class="flex gap-2">
-            <input type="number" id="manualCashInput" oninput="onManualCashInput(this.value)" placeholder="พิมพ์จำนวนเงินที่รับมา..." class="flex-1 px-3 py-1.5 border rounded-xl font-mono text-sm" />
-            <button onclick="resetCashReceived()" class="px-3 py-1.5 bg-slate-200 rounded-xl text-xs font-bold">รีเซ็ต</button>
+            <input type="number" inputmode="numeric" id="manualCashInput" oninput="onManualCashInput(this.value)" placeholder="พิมพ์จำนวนเงินที่รับมา..." class="flex-1 min-w-0 px-3 py-2 border rounded-xl font-mono" />
+            <button onclick="resetCashReceived()" class="px-3 py-2 bg-slate-200 rounded-xl text-xs font-bold">รีเซ็ต</button>
           </div>
         </div>
 
@@ -332,62 +379,62 @@
           <p class="text-xs text-slate-600">ยอดโอน <strong id="qrAmountText" class="text-maroon-700 font-mono">฿0</strong></p>
         </div>
 
-        <button id="confirmCheckoutBtn" onclick="submitOrderToGAS()" class="pos-btn w-full bg-gradient-to-r from-maroon-800 to-maroon-600 text-white font-bold py-3 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
-          <i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึกลง Google Sheets
+        <button id="confirmCheckoutBtn" onclick="submitOrderToGAS()" class="pos-btn w-full bg-gradient-to-r from-maroon-800 to-maroon-600 text-white font-bold py-3.5 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึก
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ================= Modal พรีวิวใบเสร็จ & ดาวน์โหลด ================= -->
+  <!-- ================= Modal ใบเสร็จ ================= -->
   <div id="receiptPreviewModal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col max-h-[92vh]">
-      <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center">
-        <h3 class="font-bold text-sm"><i class="fa-solid fa-receipt text-gold-400 mr-1.5"></i>ใบเสร็จรับเงิน (Receipt Preview)</h3>
-        <button onclick="closeModal('receiptPreviewModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+    <div class="bg-white rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col max-h-[92vh] max-h-[92dvh]">
+      <div class="bg-maroon-800 text-white px-4 py-2.5 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-receipt text-gold-400 mr-1.5"></i>ใบเสร็จรับเงิน</h3>
+        <button onclick="closeModal('receiptPreviewModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 overflow-y-auto bg-slate-200 flex justify-center">
-        <div id="receiptCaptureBox" class="bg-white text-black p-4 rounded shadow w-[290px] font-mono text-xs border"></div>
+      <div class="p-3 overflow-y-auto bg-slate-200 flex justify-center min-h-0">
+        <div id="receiptCaptureBox" class="bg-white text-black p-4 rounded shadow w-[290px] max-w-full font-mono text-xs border"></div>
       </div>
-      <div class="p-3 bg-white border-t grid grid-cols-2 gap-2">
-        <button onclick="downloadReceiptImage()" class="pos-btn bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-download"></i> บันทึกรูปใบเสร็จ</button>
-        <button onclick="triggerBrowserPrint()" class="pos-btn bg-maroon-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-print text-gold-400"></i> สั่งพิมพ์ / PDF</button>
+      <div class="p-3 bg-white border-t grid grid-cols-2 gap-2 shrink-0 safe-bottom">
+        <button onclick="downloadReceiptImage()" class="pos-btn bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-download"></i> บันทึกรูป</button>
+        <button onclick="triggerBrowserPrint()" class="pos-btn bg-maroon-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow"><i class="fa-solid fa-print text-gold-400"></i> พิมพ์ / PDF</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= Modal ประวัติการขาย (ซิงค์ตรงจาก Google Sheets) ================= -->
-  <div id="historyModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col max-h-[90vh]">
-      <div class="bg-maroon-800 text-white px-5 py-3 flex justify-between items-center shrink-0">
-        <div>
-          <h3 class="font-bold text-base"><i class="fa-solid fa-chart-line text-gold-400 mr-2"></i>สรุปยอดขาย & ประวัติใบเสร็จย้อนหลัง</h3>
-          <p id="historySyncStatus" class="text-[11px] text-gold-400">กำลังตรวจสอบข้อมูลกับฐานข้อมูล Google Sheets...</p>
+  <!-- ================= Modal ประวัติ ================= -->
+  <div id="historyModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-0 sm:p-3">
+    <div class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-maroon-700 flex flex-col sm:max-h-[90vh]">
+      <div class="bg-maroon-800 text-white px-4 py-3 flex justify-between items-center shrink-0">
+        <div class="min-w-0">
+          <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-chart-line text-gold-400 mr-2"></i>สรุปยอดขาย & ประวัติใบเสร็จ</h3>
+          <p id="historySyncStatus" class="text-[11px] text-gold-400 truncate">กำลังตรวจสอบข้อมูล...</p>
         </div>
-        <button onclick="closeModal('historyModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('historyModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 overflow-y-auto space-y-3 flex-1">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div class="bg-maroon-50 border p-2.5 rounded-xl"><div class="text-xs text-maroon-700">บิลทั้งหมด</div><div id="histTotalBills" class="text-xl font-mono font-bold">0 บิล</div></div>
-          <div class="bg-emerald-50 border p-2.5 rounded-xl"><div class="text-xs text-emerald-700">เงินสด (Cash)</div><div id="histCashSales" class="text-xl font-mono font-bold text-emerald-800">฿0</div></div>
-          <div class="bg-sky-50 border p-2.5 rounded-xl"><div class="text-xs text-sky-700">สแกน QR</div><div id="histQrSales" class="text-xl font-mono font-bold text-sky-800">฿0</div></div>
-          <div class="bg-amber-50 border p-2.5 rounded-xl"><div class="text-xs text-amber-800 font-bold">ยอดขายสุทธิรวม</div><div id="histTotalRevenue" class="text-xl font-mono font-bold text-maroon-800">฿0</div></div>
+      <div class="p-3 sm:p-4 overflow-y-auto space-y-3 flex-1 min-h-0">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="bg-maroon-50 border p-2.5 rounded-xl"><div class="text-xs text-maroon-700">บิลทั้งหมด</div><div id="histTotalBills" class="text-lg sm:text-xl font-mono font-bold">0 บิล</div></div>
+          <div class="bg-emerald-50 border p-2.5 rounded-xl"><div class="text-xs text-emerald-700">เงินสด</div><div id="histCashSales" class="text-lg sm:text-xl font-mono font-bold text-emerald-800">฿0</div></div>
+          <div class="bg-sky-50 border p-2.5 rounded-xl"><div class="text-xs text-sky-700">สแกน QR</div><div id="histQrSales" class="text-lg sm:text-xl font-mono font-bold text-sky-800">฿0</div></div>
+          <div class="bg-amber-50 border p-2.5 rounded-xl"><div class="text-xs text-amber-800 font-bold">ยอดขายรวม</div><div id="histTotalRevenue" class="text-lg sm:text-xl font-mono font-bold text-maroon-800">฿0</div></div>
         </div>
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <input type="text" id="historySearchInput" oninput="renderHistoryTable()" placeholder="🔍 ค้นหาคิว, เลขบิล หรือเมนู..." class="w-full sm:w-60 px-3 py-1.5 text-xs border rounded-xl" />
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <input type="text" id="historySearchInput" oninput="renderHistoryTable()" placeholder="🔍 ค้นหาคิว, เลขบิล หรือเมนู..." class="w-full sm:w-60 px-3 py-1.5 border rounded-xl" />
           <div class="flex flex-wrap gap-1.5">
-            <button onclick="syncOrdersFromGoogleSheet()" class="pos-btn bg-sky-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-arrows-rotate mr-1"></i>ซิงค์จาก Google Sheets</button>
-            <button onclick="exportHistoryCSV()" class="pos-btn bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-file-csv mr-1"></i>โหลด Excel</button>
-            <button onclick="clearAllHistoryData()" class="pos-btn bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-trash-can mr-1"></i>ล้างประวัติทั้งหมด</button>
+            <button onclick="syncOrdersFromGoogleSheet()" class="pos-btn bg-sky-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-arrows-rotate mr-1"></i>ซิงค์</button>
+            <button onclick="exportHistoryCSV()" class="pos-btn bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-file-csv mr-1"></i>โหลด Excel</button>
+            <button onclick="clearAllHistoryData()" class="pos-btn bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-trash-can mr-1"></i>ล้างประวัติ</button>
           </div>
         </div>
-        <div class="border rounded-xl overflow-hidden overflow-x-auto max-h-[42vh]">
-          <table class="w-full text-left border-collapse text-xs">
+        <div class="border rounded-xl overflow-auto max-h-[50vh]">
+          <table class="w-full text-left border-collapse text-xs min-w-[560px]">
             <thead class="bg-maroon-800 text-white sticky top-0">
               <tr>
                 <th class="p-2">คิว / เลขบิล</th>
                 <th class="p-2">วัน-เวลา</th>
-                <th class="p-2">รายละเอียดเมนูที่สั่ง</th>
+                <th class="p-2">รายการ</th>
                 <th class="p-2 text-center">ชำระ</th>
                 <th class="p-2 text-right">ยอดสุทธิ</th>
                 <th class="p-2 text-center">ใบเสร็จ</th>
@@ -400,47 +447,47 @@
     </div>
   </div>
 
-  <!-- ================= Modal จัดการร้านสำหรับ Admin ================= -->
-  <div id="adminModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col max-h-[92vh]">
-      <div class="bg-gradient-to-r from-maroon-900 to-maroon-700 text-white px-5 py-3 flex justify-between items-center shrink-0">
-        <h3 class="font-bold text-base"><i class="fa-solid fa-user-gear text-gold-400 mr-2"></i>จัดการร้าน Admin (เมนู • ท็อปปิ้ง • QR รับเงิน)</h3>
-        <button onclick="closeModal('adminModal')" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+  <!-- ================= Modal Admin ================= -->
+  <div id="adminModal" class="fixed inset-0 bg-black/60 z-40 hidden items-center justify-center p-0 sm:p-3">
+    <div class="bg-white sm:rounded-2xl max-w-4xl w-full h-full sm:h-auto overflow-hidden shadow-2xl border-2 border-gold-500 flex flex-col sm:max-h-[92vh]">
+      <div class="bg-gradient-to-r from-maroon-900 to-maroon-700 text-white px-4 py-3 flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-sm sm:text-base"><i class="fa-solid fa-user-gear text-gold-400 mr-2"></i>จัดการร้าน Admin</h3>
+        <button onclick="closeModal('adminModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="flex border-b bg-slate-100 px-4 pt-2 gap-2 shrink-0">
-        <button onclick="switchAdminTab('MENU')" id="admTabMenu" class="px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍛 1. เมนูอาหาร</button>
-        <button onclick="switchAdminTab('TOPPING')" id="admTabTopping" class="px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">🧀 2. ท็อปปิ้ง</button>
-        <button onclick="switchAdminTab('QR')" id="admTabQr" class="px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">📱 3. QR Code รับเงิน</button>
+      <div class="flex border-b bg-slate-100 px-3 pt-2 gap-1.5 shrink-0 overflow-x-auto">
+        <button onclick="switchAdminTab('MENU')" id="admTabMenu" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs bg-white text-maroon-800 border-t-2 border-x border-maroon-700">🍛 เมนูอาหาร</button>
+        <button onclick="switchAdminTab('TOPPING')" id="admTabTopping" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">🧀 ท็อปปิ้ง</button>
+        <button onclick="switchAdminTab('QR')" id="admTabQr" class="whitespace-nowrap px-3 py-1.5 rounded-t-xl font-bold text-xs text-slate-600">📱 QR รับเงิน</button>
       </div>
-      <div class="p-4 overflow-y-auto flex-1">
+      <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
         <div id="adminMenuSection" class="space-y-3">
           <div class="bg-maroon-50/70 border border-maroon-200 p-3 rounded-xl">
             <h4 id="menuFormTitle" class="font-bold text-xs text-maroon-800 mb-2">➕ เพิ่ม / แก้ไขเมนูอาหาร</h4>
             <input type="hidden" id="editMenuIndex" value="-1" />
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
-              <input type="text" id="inpMenuCode" placeholder="รหัส เช่น 108" class="px-2.5 py-1.5 border rounded-lg font-mono" />
-              <input type="text" id="inpMenuName" placeholder="ชื่อเมนูอาหาร" class="col-span-2 px-2.5 py-1.5 border rounded-lg" />
-              <input type="number" id="inpMenuPrice" placeholder="ราคา (บาท)" class="px-2.5 py-1.5 border rounded-lg font-mono" />
-              <select id="inpMenuCat" class="px-2 py-1.5 border rounded-lg bg-white">
+              <input type="text" id="inpMenuCode" placeholder="รหัส เช่น 108" class="px-2.5 py-2 border rounded-lg font-mono" />
+              <input type="text" id="inpMenuName" placeholder="ชื่อเมนูอาหาร" class="col-span-2 px-2.5 py-2 border rounded-lg" />
+              <input type="number" inputmode="numeric" id="inpMenuPrice" placeholder="ราคา (บาท)" class="px-2.5 py-2 border rounded-lg font-mono" />
+              <select id="inpMenuCat" class="px-2 py-2 border rounded-lg bg-white">
                 <option value="CUSTOM">เลือกท็อปปิ้ง</option>
                 <option value="SET" selected>เมนูฮิตขายดี</option>
                 <option value="DRINK">เครื่องดื่ม/ซุป</option>
               </select>
-              <input type="text" id="inpMenuBadge" placeholder="ป้าย เช่น ขายดี" class="px-2.5 py-1.5 border rounded-lg" />
+              <input type="text" id="inpMenuBadge" placeholder="ป้าย เช่น ขายดี" class="px-2.5 py-2 border rounded-lg" />
             </div>
             <div class="flex flex-wrap items-center justify-between gap-2 mt-2.5 pt-2 border-t">
               <label class="flex items-center gap-1.5 text-xs font-medium cursor-pointer">
                 <input type="checkbox" id="inpMenuCustom" class="w-4 h-4 accent-maroon-700" />
-                <span>เปิดหน้าต่างให้เลือกท็อปปิ้งเพิ่มได้เมื่อกดเมนูนี้</span>
+                <span>เปิดหน้าต่างเลือกท็อปปิ้งเมื่อกดเมนูนี้</span>
               </label>
               <div class="flex gap-2">
-                <button onclick="resetMenuForm()" class="px-3 py-1 rounded-lg border bg-white text-xs">ล้าง</button>
-                <button onclick="saveMenuItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-1 rounded-lg text-xs">บันทึกเมนู</button>
+                <button onclick="resetMenuForm()" class="px-3 py-1.5 rounded-lg border bg-white text-xs">ล้าง</button>
+                <button onclick="saveMenuItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-1.5 rounded-lg text-xs">บันทึกเมนู</button>
               </div>
             </div>
           </div>
-          <div class="border rounded-xl overflow-hidden">
-            <table class="w-full text-left border-collapse text-xs">
+          <div class="border rounded-xl overflow-auto">
+            <table class="w-full text-left border-collapse text-xs min-w-[480px]">
               <thead class="bg-slate-800 text-white">
                 <tr><th class="p-2">รหัส</th><th class="p-2">ชื่อเมนู</th><th class="p-2">หมวด</th><th class="p-2 text-center">ท็อปปิ้ง</th><th class="p-2 text-right">ราคา</th><th class="p-2 text-center">จัดการ</th></tr>
               </thead>
@@ -452,10 +499,10 @@
         <div id="adminToppingSection" class="hidden space-y-3">
           <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex flex-wrap gap-2 items-end">
             <input type="hidden" id="editToppingIndex" value="-1" />
-            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น หมูกรอบ" class="flex-1 min-w-[160px] px-3 py-1.5 border rounded-lg text-xs" />
-            <input type="number" id="inpToppingPrice" placeholder="ราคาบวกเพิ่ม (บาท)" class="w-32 px-3 py-1.5 border rounded-lg text-xs font-mono" />
-            <button onclick="saveToppingItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-1.5 rounded-lg text-xs">บันทึกท็อปปิ้ง</button>
-            <button onclick="resetToppingForm()" class="px-3 py-1.5 rounded-lg border bg-white text-xs">ล้าง</button>
+            <input type="text" id="inpToppingName" placeholder="ชื่อท็อปปิ้ง เช่น หมูกรอบ" class="flex-1 min-w-[150px] px-3 py-2 border rounded-lg text-xs" />
+            <input type="number" inputmode="numeric" id="inpToppingPrice" placeholder="ราคาบวกเพิ่ม" class="w-28 px-3 py-2 border rounded-lg text-xs font-mono" />
+            <button onclick="saveToppingItem()" class="pos-btn bg-maroon-700 text-white font-bold px-4 py-2 rounded-lg text-xs">บันทึก</button>
+            <button onclick="resetToppingForm()" class="px-3 py-2 rounded-lg border bg-white text-xs">ล้าง</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="adminToppingList"></div>
         </div>
@@ -476,19 +523,19 @@
           </div>
         </div>
       </div>
-      <div class="p-3 bg-slate-100 border-t flex justify-between items-center shrink-0">
+      <div class="p-3 bg-slate-100 border-t flex justify-between items-center shrink-0 safe-bottom">
         <button onclick="resetDefaultCatalog()" class="text-xs text-rose-600 hover:underline">คืนค่าเมนูเริ่มต้น</button>
-        <button onclick="closeModal('adminModal')" class="bg-maroon-800 text-white font-bold px-5 py-1.5 rounded-xl text-xs">เสร็จสิ้น</button>
+        <button onclick="closeModal('adminModal')" class="bg-maroon-800 text-white font-bold px-5 py-2 rounded-xl text-xs">เสร็จสิ้น</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= Modal ตั้งค่า URL Google Apps Script ================= -->
-  <div id="configModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-3 text-xs">
+  <!-- ================= Modal ตั้งค่า GAS ================= -->
+  <div id="configModal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-3 text-xs max-h-[95dvh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-sm text-maroon-800"><i class="fa-solid fa-link mr-1"></i>ตั้งค่าการเชื่อมต่อ Google Sheets</h3>
-        <button onclick="closeModal('configModal')"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeModal('configModal')" class="w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
         <label class="block font-semibold mb-1">Web App URL (ลงท้ายด้วย /exec)</label>
@@ -496,20 +543,36 @@
       </div>
       <div>
         <label class="block font-semibold mb-1">Secret API Key</label>
-        <input type="password" id="apiKeyInput" value="AFT-KHAI-POS-2026-SECRET" class="w-full px-3 py-2 border rounded-xl font-mono" />
+        <input type="password" id="apiKeyInput" class="w-full px-3 py-2 border rounded-xl font-mono" />
       </div>
-      <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-[11px] text-amber-900">
-        💡 หลังจากวาง Web App URL แล้ว กดปุ่ม <b>"บันทึกและซิงค์ข้อมูล"</b> ระบบจะดึงข้อมูลจาก Google Sheets ทันที หากในชีตว่างเปล่า ประวัติค้างในเครื่องจะถูกล้างให้ตรงกันอัตโนมัติครับ
+      <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-[11px] text-emerald-900 leading-relaxed">
+        ✅ <b>ตั้งครั้งเดียวจบ:</b> ระบบจะจำลิงก์นี้ไว้ในเครื่อง + ฝังลงใน URL ของหน้านี้ (บุ๊กมาร์ก / เพิ่มลงหน้าจอโฮมแล้วใช้ได้เลย) และถ้าต้องการให้ทุกเครื่องเชื่อมอัตโนมัติ ให้วางลิงก์ที่บรรทัด <code>DEFAULT_GAS_URL</code> ในไฟล์ HTML ครั้งเดียว
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('configModal')" class="px-4 py-1.5 rounded-xl border">ยกเลิก</button>
-        <button onclick="saveConfig()" class="px-5 py-1.5 rounded-xl bg-maroon-700 text-white font-bold">บันทึกและซิงค์ข้อมูล</button>
+        <button onclick="closeModal('configModal')" class="px-4 py-2 rounded-xl border">ยกเลิก</button>
+        <button onclick="saveConfig()" class="px-5 py-2 rounded-xl bg-maroon-700 text-white font-bold">บันทึกและซิงค์</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
+    // =====================================================================
+    //  ★★★ ตั้งค่าเชื่อม Google Sheets "ครั้งเดียวจบ" ★★★
+    //  วาง Web App URL (ลงท้าย /exec) ไว้ในเครื่องหมายคำพูดด้านล่างนี้ 1 ครั้ง
+    //  แล้วทุกเครื่อง/ทุกเบราว์เซอร์ที่เปิดไฟล์นี้จะเชื่อมต่ออัตโนมัติ ไม่ต้องตั้งซ้ำ
+    // =====================================================================
+    const DEFAULT_GAS_URL = '';
+    const DEFAULT_API_KEY = 'AFT-KHAI-POS-2026-SECRET';
+
+    // ----- ตัวช่วยอ่านค่าเชื่อมต่อ (ลำดับ: URL param > localStorage > ค่าในไฟล์) -----
+    function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function getGasUrl() { return (safeGet('AFT_GAS_URL') || DEFAULT_GAS_URL || '').trim(); }
+    function getApiKey() { return (safeGet('AFT_GAS_KEY') || DEFAULT_API_KEY).trim(); }
+
+    // ขอให้เบราว์เซอร์เก็บข้อมูลถาวร (กันโดนล้างเองเมื่อพื้นที่เต็ม)
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
     const DEFAULT_MENUS = [
       { id:'M01', code:'101', name:'ข้าวไข่เจียว 1 ฟอง (เลือกท็อปปิ้ง)', price:25, cat:'CUSTOM', custom:true, badge:'เลือกเครื่องได้' },
       { id:'M02', code:'102', name:'ข้าวไข่เจียว 2 ฟอง (เลือกท็อปปิ้ง)', price:35, cat:'CUSTOM', custom:true, badge:'อิ่มคุ้มขายดี' },
@@ -532,12 +595,12 @@
       { name:'ชะอม / โหระพา', price:5 }, { name:'หอมแดง / มะเขือเทศ', price:5 }, { name:'วุ้นเส้น', price:5 }
     ];
 
-    let menuItems = JSON.parse(localStorage.getItem('AFT_CUSTOM_MENUS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_MENUS));
-    let toppingList = JSON.parse(localStorage.getItem('AFT_CUSTOM_TOPPINGS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_TOPPINGS));
+    let menuItems = JSON.parse(safeGet('AFT_CUSTOM_MENUS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_MENUS));
+    let toppingList = JSON.parse(safeGet('AFT_CUSTOM_TOPPINGS') || 'null') || JSON.parse(JSON.stringify(DEFAULT_TOPPINGS));
 
     let currentCategory = 'ALL', cart = [], currentPinInput = '';
-    let heldBills = JSON.parse(localStorage.getItem('AFT_HELD_BILLS') || '[]');
-    let queueCounter = parseInt(localStorage.getItem('AFT_QUEUE_NO') || '1', 10);
+    let heldBills = JSON.parse(safeGet('AFT_HELD_BILLS') || '[]');
+    let queueCounter = parseInt(safeGet('AFT_QUEUE_NO') || '1', 10);
     let currentCashier = 'แคชเชียร์ อวท. 1', currentRole = 'CASHIER';
     let selectedBaseItem = null, selectedToppings = [], selectedNotes = [];
     let currentPaymentMethod = 'CASH', cashReceivedAmount = 0, currentReceiptOrder = null;
@@ -546,7 +609,11 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('gas')) localStorage.setItem('AFT_GAS_URL', decodeURIComponent(urlParams.get('gas')));
+      // รับลิงก์/คีย์จาก URL แล้วจำถาวรทันที (เปิดครั้งเดียวผ่านลิงก์ที่มี ?gas=... ก็เชื่อมต่อค้างไว้ตลอด)
+      if (urlParams.get('gas')) safeSet('AFT_GAS_URL', urlParams.get('gas'));
+      if (urlParams.get('key')) safeSet('AFT_GAS_KEY', urlParams.get('key'));
+      // ถ้ามีค่าในเครื่อง/ไฟล์ แต่ URL ยังไม่มี ?gas ให้ฝังลง URL (บุ๊กมาร์กแล้วใช้ได้ทุกครั้ง)
+      pinGasToUrl();
 
       updateClock();
       setInterval(updateClock, 1000);
@@ -563,18 +630,37 @@
       updateHeldBadge();
       renderQrDisplay();
       broadcastCustomerState('ORDERING');
-      // ซิงค์ข้อมูลจาก Google Sheets ทันทีที่เปิดหน้าเว็บ
       syncOrdersFromGoogleSheet(true);
+
+      // ถ้ายังไม่เคยเชื่อมเลย ให้เด้งหน้าตั้งค่าครั้งแรกให้อัตโนมัติ (ทำครั้งเดียว)
+      if (!getGasUrl() && !safeGet('AFT_ASKED_CONFIG')) {
+        safeSet('AFT_ASKED_CONFIG', '1');
+        setTimeout(openConfigModal, 600);
+      }
     });
+
+    function pinGasToUrl() {
+      try {
+        const gas = getGasUrl();
+        if (!gas) return;
+        const u = new URL(window.location.href);
+        if (u.searchParams.get('gas') === gas) return;
+        u.searchParams.set('gas', gas);
+        history.replaceState(null, '', u.toString());
+      } catch (e) {}
+    }
 
     function showModal(id) { const el = document.getElementById(id); el.classList.remove('hidden'); el.classList.add('flex'); }
     function closeModal(id) { const el = document.getElementById(id); el.classList.add('hidden'); el.classList.remove('flex'); }
 
+    // ----- ลิ้นชักตะกร้า (มือถือ) -----
+    function openCartDrawer() { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartBackdrop').classList.add('show'); }
+    function closeCartDrawer() { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartBackdrop').classList.remove('show'); }
+
     function updateClock() {
       const t = new Date().toLocaleTimeString('th-TH', { hour12: false });
-      document.getElementById('liveClock').textContent = t;
-      const c2 = document.getElementById('custLiveClock');
-      if (c2) c2.textContent = t;
+      const c1 = document.getElementById('liveClock'); if (c1) c1.textContent = t;
+      const c2 = document.getElementById('custLiveClock'); if (c2) c2.textContent = t;
     }
 
     function updateQueueBadge() {
@@ -584,7 +670,7 @@
     // --- PIN Login ---
     function pressPin(d) { if (currentPinInput.length < 6) { currentPinInput += d; document.getElementById('pinDisplay').value = currentPinInput; } }
     function clearPin() { currentPinInput = ''; document.getElementById('pinDisplay').value = ''; }
-    function lockPosScreen() { clearPin(); document.getElementById('pinLockModal').classList.remove('hidden'); }
+    function lockPosScreen() { clearPin(); closeCartDrawer(); document.getElementById('pinLockModal').classList.remove('hidden'); }
     function submitPin() {
       if (currentPinInput === '1234' || currentPinInput === '9999') {
         const isAdmin = currentPinInput === '9999';
@@ -593,6 +679,7 @@
         document.getElementById('cashierNameDisplay').textContent = currentCashier;
         document.getElementById('roleBadge').textContent = currentRole;
         document.getElementById('pinLockModal').classList.add('hidden');
+        clearPin();
         playBeep(880, 80);
         return;
       }
@@ -600,10 +687,10 @@
       clearPin();
     }
 
-    // --- 7-Eleven Customer Display Sync ---
+    // --- Customer Display Sync ---
     function getGeneratedCustomerUrl() {
       const base = window.location.origin + window.location.pathname;
-      const gas = localStorage.getItem('AFT_GAS_URL') || '';
+      const gas = getGasUrl();
       const p = new URLSearchParams();
       p.set('screen', 'customer');
       if (gas) p.set('gas', gas);
@@ -614,7 +701,7 @@
     function copyCustomerDisplayUrl() {
       const inp = document.getElementById('customerDisplayUrlInput');
       inp.select();
-      navigator.clipboard.writeText(inp.value);
+      try { navigator.clipboard.writeText(inp.value); } catch (e) { document.execCommand('copy'); }
       Swal.fire({ toast:true, position:'top-end', icon:'success', title:'คัดลอกลิงก์จอลูกค้าแล้ว!', showConfirmButton:false, timer:1800 });
     }
     function openCustomerPopupWindow() { window.open(getGeneratedCustomerUrl(), 'CustDisplay', 'width=1000,height=680'); }
@@ -631,24 +718,20 @@
         totalAmount: total,
         cashReceived: extra.cashReceived !== undefined ? extra.cashReceived : cashReceivedAmount,
         changeAmount: extra.changeAmount !== undefined ? extra.changeAmount : Math.max(0, cashReceivedAmount - total),
-        qrImage: localStorage.getItem('AFT_QR_IMAGE') || '',
-        qrText: localStorage.getItem('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)'
+        qrImage: safeGet('AFT_QR_IMAGE') || '',
+        qrText: safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)'
       };
-      localStorage.setItem('AFT_LIVE_CUSTOMER_STATE', JSON.stringify(displayData));
+      safeSet('AFT_LIVE_CUSTOMER_STATE', JSON.stringify(displayData));
       if (posChannel) posChannel.postMessage(displayData);
 
-      const gasUrl = localStorage.getItem('AFT_GAS_URL') || '';
+      const gasUrl = getGasUrl();
       if (gasUrl) {
         clearTimeout(syncTimer);
         syncTimer = setTimeout(() => {
           fetch(gasUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'UPDATE_DISPLAY',
-              apiKey: localStorage.getItem('AFT_GAS_KEY') || 'AFT-KHAI-POS-2026-SECRET',
-              displayData: displayData
-            })
+            body: JSON.stringify({ action: 'UPDATE_DISPLAY', apiKey: getApiKey(), displayData: displayData })
           }).catch(() => {});
         }, 200);
       }
@@ -658,7 +741,7 @@
     function initCustomerDisplayMode() {
       document.getElementById('pinLockModal').classList.add('hidden');
       showModal('customerScreenView');
-      const saved = localStorage.getItem('AFT_LIVE_CUSTOMER_STATE');
+      const saved = safeGet('AFT_LIVE_CUSTOMER_STATE');
       if (saved) renderCustomerScreenUI(JSON.parse(saved));
 
       if (posChannel) posChannel.onmessage = (ev) => { if (ev.data) renderCustomerScreenUI(ev.data); };
@@ -667,7 +750,7 @@
       });
 
       setInterval(async () => {
-        const gasUrl = localStorage.getItem('AFT_GAS_URL') || '';
+        const gasUrl = getGasUrl();
         if (!gasUrl) return;
         try {
           const res = await fetch(`${gasUrl}?action=GET_DISPLAY&t=${Date.now()}`);
@@ -691,14 +774,14 @@
         listEl.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-14"><i class="fa-solid fa-bowl-rice text-5xl mb-2 text-slate-300"></i><p class="font-bold">ยินดีต้อนรับครับ</p><p class="text-xs">สั่งข้าวไข่เจียวกับพนักงานได้เลยครับ</p></div>`;
       } else {
         listEl.innerHTML = items.map((item, idx) => `
-          <div class="p-3 bg-white rounded-2xl shadow-2xs border flex items-center justify-between">
-            <div>
-              <div class="font-bold text-base text-slate-800">${idx + 1}. ${item.name}</div>
+          <div class="p-3 bg-white rounded-2xl shadow-2xs border flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="font-bold text-sm sm:text-base text-slate-800">${idx + 1}. ${item.name}</div>
               ${item.toppings && item.toppings.length ? `<div class="text-xs text-maroon-700 font-semibold">+ ${item.toppings.join(', ')}</div>` : ''}
             </div>
-            <div class="flex items-center gap-3">
-              <span class="bg-maroon-100 text-maroon-900 font-mono font-bold px-2.5 py-0.5 rounded-lg text-sm">x${item.qty}</span>
-              <span class="font-mono font-extrabold text-lg text-maroon-800 w-16 text-right">฿${item.unitPrice * item.qty}</span>
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span class="bg-maroon-100 text-maroon-900 font-mono font-bold px-2 py-0.5 rounded-lg text-sm">x${item.qty}</span>
+              <span class="font-mono font-extrabold text-base sm:text-lg text-maroon-800 w-16 text-right">฿${item.unitPrice * item.qty}</span>
             </div>
           </div>
         `).join('');
@@ -738,8 +821,8 @@
       currentCategory = cat;
       document.querySelectorAll('.cat-btn').forEach(btn => {
         btn.className = (btn.dataset.cat === cat)
-          ? 'cat-btn bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs'
-          : 'cat-btn bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border';
+          ? 'cat-btn whitespace-nowrap bg-maroon-700 text-white font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs'
+          : 'cat-btn whitespace-nowrap bg-white text-slate-700 font-semibold px-3 py-1.5 rounded-xl text-xs sm:text-sm border';
       });
       renderMenuGrid();
     }
@@ -748,12 +831,12 @@
       const kw = document.getElementById('searchInput').value.trim().toLowerCase();
       const filtered = menuItems.filter(m => (currentCategory === 'ALL' || m.cat === currentCategory) && (m.name.toLowerCase().includes(kw) || String(m.code).includes(kw)));
       document.getElementById('menuGrid').innerHTML = filtered.map(item => `
-        <button onclick="handleMenuClick('${item.id}')" class="pos-btn bg-white hover:border-maroon-600 border-2 border-slate-200 rounded-2xl p-3 text-left shadow-2xs flex flex-col justify-between h-32 group">
-          <div class="flex justify-between items-start w-full">
-            <span class="bg-maroon-50 text-maroon-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-maroon-200">#${item.code}</span>
-            <span class="bg-gold-400/20 text-maroon-900 text-[10px] font-semibold px-2 py-0.5 rounded-full">${item.badge || 'เมนูร้าน'}</span>
+        <button onclick="handleMenuClick('${item.id}')" class="pos-btn bg-white hover:border-maroon-600 border-2 border-slate-200 rounded-2xl p-2.5 sm:p-3 text-left shadow-2xs flex flex-col justify-between h-[7.5rem] sm:h-32 group min-w-0">
+          <div class="flex justify-between items-start w-full gap-1">
+            <span class="bg-maroon-50 text-maroon-700 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border border-maroon-200 shrink-0">#${item.code}</span>
+            <span class="bg-gold-400/20 text-maroon-900 text-[10px] font-semibold px-1.5 py-0.5 rounded-full truncate">${item.badge || 'เมนูร้าน'}</span>
           </div>
-          <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug group-hover:text-maroon-700 line-clamp-2">${item.name}</div>
+          <div class="font-bold text-slate-800 text-xs sm:text-sm leading-snug group-hover:text-maroon-700 line-clamp-2 break-words">${item.name}</div>
           <div class="flex items-center justify-between w-full pt-1 border-t border-slate-100">
             <span class="font-mono font-bold text-base text-maroon-700">฿${item.price}</span>
             <span class="w-6 h-6 rounded-full bg-maroon-700 text-gold-400 flex items-center justify-center text-xs"><i class="fa-solid ${item.custom ? 'fa-sliders' : 'fa-plus'}"></i></span>
@@ -774,11 +857,11 @@
       selectedBaseItem = baseItem; selectedToppings = []; selectedNotes = [];
       document.getElementById('modalBaseTitle').textContent = baseItem.name;
       document.getElementById('toppingOptionsGrid').innerHTML = toppingList.map((t, i) => `
-        <button type="button" onclick="toggleTopping(${i})" id="topBtn_${i}" class="pos-btn p-2 rounded-xl border border-slate-300 bg-white flex justify-between items-center text-xs">
-          <span class="font-medium">${t.name}</span><span class="font-mono font-bold text-maroon-700">+${t.price}</span>
+        <button type="button" onclick="toggleTopping(${i})" id="topBtn_${i}" class="pos-btn p-2.5 rounded-xl border border-slate-300 bg-white flex justify-between items-center text-xs">
+          <span class="font-medium text-left">${t.name}</span><span class="font-mono font-bold text-maroon-700 ml-1">+${t.price}</span>
         </button>
       `).join('');
-      document.querySelectorAll('.note-chip').forEach(b => b.className = 'note-chip px-3 py-1 rounded-full text-xs border');
+      document.querySelectorAll('.note-chip').forEach(b => b.className = 'note-chip px-3 py-1.5 rounded-full text-xs border');
       updateCustomPricePreview();
       showModal('toppingModal');
     }
@@ -787,15 +870,15 @@
       const top = toppingList[idx];
       const pos = selectedToppings.findIndex(t => t.name === top.name);
       const btn = document.getElementById(`topBtn_${idx}`);
-      if (pos > -1) { selectedToppings.splice(pos, 1); btn.className = 'pos-btn p-2 rounded-xl border border-slate-300 bg-white flex justify-between items-center text-xs'; }
-      else { selectedToppings.push(top); btn.className = 'pos-btn p-2 rounded-xl border-2 border-maroon-700 bg-maroon-50 flex justify-between items-center text-xs'; }
+      if (pos > -1) { selectedToppings.splice(pos, 1); btn.className = 'pos-btn p-2.5 rounded-xl border border-slate-300 bg-white flex justify-between items-center text-xs'; }
+      else { selectedToppings.push(top); btn.className = 'pos-btn p-2.5 rounded-xl border-2 border-maroon-700 bg-maroon-50 flex justify-between items-center text-xs'; }
       updateCustomPricePreview();
     }
 
     function toggleNote(btn, txt) {
       const pos = selectedNotes.indexOf(txt);
-      if (pos > -1) { selectedNotes.splice(pos, 1); btn.className = 'note-chip px-3 py-1 rounded-full text-xs border'; }
-      else { selectedNotes.push(txt); btn.className = 'note-chip px-3 py-1 rounded-full text-xs border bg-maroon-700 text-white font-semibold'; }
+      if (pos > -1) { selectedNotes.splice(pos, 1); btn.className = 'note-chip px-3 py-1.5 rounded-full text-xs border'; }
+      else { selectedNotes.push(txt); btn.className = 'note-chip px-3 py-1.5 rounded-full text-xs border bg-maroon-700 text-white font-semibold'; }
     }
 
     function updateCustomPricePreview() {
@@ -838,26 +921,29 @@
     function renderCart() {
       const list = document.getElementById('cartList');
       const total = getCartTotal();
+      const qty = cart.reduce((s, i) => s + i.qty, 0);
       document.getElementById('bigTotalDisplay').textContent = `฿${total.toFixed(2)}`;
-      document.getElementById('totalQtyDisplay').textContent = cart.reduce((s, i) => s + i.qty, 0);
+      document.getElementById('totalQtyDisplay').textContent = qty;
+      document.getElementById('mobileTotal').textContent = `฿${total.toFixed(2)}`;
+      document.getElementById('mobileQty').textContent = qty;
 
       if (!cart.length) {
-        list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-8"><i class="fa-solid fa-basket-shopping text-3xl mb-1 text-slate-300"></i><p class="text-xs">แตะเลือกเมนูฝั่งซ้ายเพื่อเริ่มขาย</p></div>`;
+        list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-8"><i class="fa-solid fa-basket-shopping text-3xl mb-1 text-slate-300"></i><p class="text-xs">แตะเลือกเมนูเพื่อเริ่มขาย</p></div>`;
         return;
       }
       list.innerHTML = cart.map((item, idx) => `
         <div class="p-2 bg-white rounded-xl mb-1.5 shadow-2xs flex items-center justify-between gap-2 border border-slate-100">
           <div class="flex-1 min-w-0">
             <div class="font-bold text-slate-800 text-xs sm:text-sm truncate">${idx + 1}. ${item.name}</div>
-            ${item.toppings && item.toppings.length ? `<div class="text-[11px] text-maroon-700">+ ${item.toppings.join(', ')}</div>` : ''}
+            ${item.toppings && item.toppings.length ? `<div class="text-[11px] text-maroon-700 break-words">+ ${item.toppings.join(', ')}</div>` : ''}
             <div class="text-[11px] text-slate-400 font-mono">฿${item.unitPrice}/จาน</div>
           </div>
-          <div class="flex items-center gap-1">
-            <button onclick="adjustQty(${idx}, -1)" class="w-6 h-6 rounded bg-slate-100 font-bold text-xs">-</button>
-            <span class="w-5 text-center font-mono font-bold text-xs">${item.qty}</span>
-            <button onclick="adjustQty(${idx}, 1)" class="w-6 h-6 rounded bg-maroon-50 text-maroon-800 font-bold text-xs">+</button>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="adjustQty(${idx}, -1)" class="w-8 h-8 rounded bg-slate-100 font-bold text-sm">-</button>
+            <span class="w-6 text-center font-mono font-bold text-xs">${item.qty}</span>
+            <button onclick="adjustQty(${idx}, 1)" class="w-8 h-8 rounded bg-maroon-50 text-maroon-800 font-bold text-sm">+</button>
           </div>
-          <div class="w-14 text-right font-mono font-bold text-maroon-800 text-xs sm:text-sm">฿${item.unitPrice * item.qty}</div>
+          <div class="w-14 text-right font-mono font-bold text-maroon-800 text-xs sm:text-sm shrink-0">฿${item.unitPrice * item.qty}</div>
         </div>
       `).join('');
     }
@@ -865,13 +951,13 @@
     function holdCurrentBill() {
       if (!cart.length) return;
       heldBills.push({ items: JSON.parse(JSON.stringify(cart)), total: getCartTotal() });
-      localStorage.setItem('AFT_HELD_BILLS', JSON.stringify(heldBills));
-      cart = []; renderCart(); updateHeldBadge(); broadcastCustomerState('ORDERING');
+      safeSet('AFT_HELD_BILLS', JSON.stringify(heldBills));
+      cart = []; renderCart(); updateHeldBadge(); broadcastCustomerState('ORDERING'); closeCartDrawer();
     }
     function recallHeldBill() {
       if (!heldBills.length) return Swal.fire({ icon:'info', title:'ไม่มีบิลที่พักไว้', confirmButtonColor:'#6A0D25' });
       cart = heldBills.pop().items;
-      localStorage.setItem('AFT_HELD_BILLS', JSON.stringify(heldBills));
+      safeSet('AFT_HELD_BILLS', JSON.stringify(heldBills));
       renderCart(); updateHeldBadge(); broadcastCustomerState('ORDERING');
     }
     function updateHeldBadge() { document.getElementById('heldCountBadge').textContent = heldBills.length; }
@@ -922,7 +1008,7 @@
       }
       const orderData = {
         action: 'SAVE_ORDER',
-        apiKey: localStorage.getItem('AFT_GAS_KEY') || 'AFT-KHAI-POS-2026-SECRET',
+        apiKey: getApiKey(),
         orderId: 'ORD-' + Date.now().toString().slice(-6),
         queueNo: 'A' + String(queueCounter).padStart(3, '0'),
         cashier: currentCashier,
@@ -936,9 +1022,9 @@
 
       const btn = document.getElementById('confirmCheckoutBtn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกลง Google Sheets...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
 
-      const gasUrl = localStorage.getItem('AFT_GAS_URL') || '';
+      const gasUrl = getGasUrl();
       let savedToCloud = false;
 
       if (gasUrl) {
@@ -952,30 +1038,31 @@
           if (resJson && resJson.status === 'success') {
             savedToCloud = true;
           } else {
-            Swal.fire({ icon:'warning', title:'แจ้งเตือนจาก Google Sheets', text: resJson.message || 'บันทึกไม่สำเร็จ กรุณาเช็กการ Deploy เป็น New Version' });
+            Swal.fire({ icon:'warning', title:'แจ้งเตือนจาก Google Sheets', text: (resJson && resJson.message) || 'บันทึกไม่สำเร็จ กรุณาเช็กการ Deploy เป็น New Version' });
           }
         } catch (err) {
           console.warn('GAS Error:', err);
         }
       }
 
-      const localOrders = JSON.parse(localStorage.getItem('AFT_LOCAL_ORDERS') || '[]');
+      const localOrders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       localOrders.unshift(orderData);
-      localStorage.setItem('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
+      safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
 
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึกลง Google Sheets';
+      btn.innerHTML = '<i class="fa-solid fa-check-circle text-gold-400"></i> ยืนยันชำระเงิน & บันทึก';
 
       broadcastCustomerState('PAID', { cashReceived: cashReceivedAmount, changeAmount: orderData.changeAmount });
       closeModal('paymentModal');
+      closeCartDrawer();
       queueCounter++;
-      localStorage.setItem('AFT_QUEUE_NO', String(queueCounter));
+      safeSet('AFT_QUEUE_NO', String(queueCounter));
       updateQueueBadge();
       cart = []; renderCart(); playBeep(980, 120);
       openReceiptPreview(orderData);
 
       if (!gasUrl) {
-        Swal.fire({ toast:true, position:'bottom-end', icon:'warning', title:'บันทึกเฉพาะในเครื่อง (ยังไม่ได้ใส่ลิงก์ Google Sheets)', showConfirmButton:false, timer:3000 });
+        Swal.fire({ toast:true, position:'bottom-end', icon:'warning', title:'บันทึกเฉพาะในเครื่อง (ยังไม่ได้ตั้งลิงก์ Google Sheets)', showConfirmButton:false, timer:3000 });
       } else if (savedToCloud) {
         Swal.fire({ toast:true, position:'bottom-end', icon:'success', title:'บันทึกลง Google Sheets สำเร็จ!', showConfirmButton:false, timer:2000 });
       }
@@ -983,7 +1070,7 @@
       setTimeout(() => { if (!cart.length) broadcastCustomerState('ORDERING'); }, 5000);
     }
 
-    // --- Receipt Print & PNG Download ---
+    // --- Receipt ---
     function generateReceiptInnerHtml(order) {
       const itemsHtml = (order.items || []).map((i, idx) => `
         <div style="margin-bottom:4px;">
@@ -1034,38 +1121,37 @@
       link.click();
     }
 
-    // --- History & Real-time Google Sheets Sync ---
+    // --- History & Sheets Sync ---
     async function openHistoryModal() {
       showModal('historyModal');
       await syncOrdersFromGoogleSheet(false);
     }
 
     async function syncOrdersFromGoogleSheet(silent = false) {
-      const gasUrl = localStorage.getItem('AFT_GAS_URL') || '';
+      const gasUrl = getGasUrl();
       const statusEl = document.getElementById('historySyncStatus');
       if (!gasUrl) {
-        if (statusEl) statusEl.textContent = '⚠️ โหมดออฟไลน์ในเครื่อง (ยังไม่ได้ตั้งค่าลิงก์ Google Sheets Web App URL)';
+        if (statusEl) statusEl.textContent = '⚠️ โหมดออฟไลน์ (ยังไม่ได้ตั้งลิงก์ Google Sheets)';
         renderHistoryTable();
         return;
       }
 
-      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังซิงค์ข้อมูลล่าสุดจาก Google Sheets...';
+      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังซิงค์จาก Google Sheets...';
       try {
         const res = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`);
         const data = await res.json();
         if (data && data.status === 'success' && Array.isArray(data.orders)) {
-          // ทับข้อมูลในเครื่องให้ตรงกับ Google Sheets 100% (ถ้าในชีตลบแล้ว ในเว็บก็จะหายทันที)
-          localStorage.setItem('AFT_LOCAL_ORDERS', JSON.stringify(data.orders));
+          safeSet('AFT_LOCAL_ORDERS', JSON.stringify(data.orders));
           if (data.orders.length === 0) {
             queueCounter = 1;
-            localStorage.setItem('AFT_QUEUE_NO', '1');
+            safeSet('AFT_QUEUE_NO', '1');
             updateQueueBadge();
           }
           if (statusEl) statusEl.textContent = `✅ ซิงค์ตรงกับ Google Sheets แล้ว (${data.orders.length} บิล)`;
-          if (!silent) Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ซิงค์ข้อมูลตรงกับ Google Sheets แล้ว', showConfirmButton:false, timer:1500 });
+          if (!silent) Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ซิงค์ข้อมูลแล้ว', showConfirmButton:false, timer:1500 });
         }
       } catch (err) {
-        if (statusEl) statusEl.textContent = '⚠️ ไม่สามารถดึงข้อมูลจาก Google Sheets ได้ (กรุณาเช็กการ Deploy เป็น New version)';
+        if (statusEl) statusEl.textContent = '⚠️ ดึงข้อมูลจาก Google Sheets ไม่ได้ (เช็กอินเทอร์เน็ต / การ Deploy)';
       }
       renderHistoryTable();
     }
@@ -1073,7 +1159,7 @@
     async function clearAllHistoryData() {
       const confirm = await Swal.fire({
         title: 'ล้างประวัติการขายทั้งหมด?',
-        text: 'ข้อมูลบิลที่ค้างในหน้าเว็บและใน Google Sheets จะถูกล้างเป็น 0 และรีเซ็ตคิวเป็น A001',
+        text: 'ข้อมูลบิลในหน้าเว็บและ Google Sheets จะถูกล้าง และรีเซ็ตคิวเป็น A001',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e11d48',
@@ -1082,33 +1168,27 @@
       });
       if (!confirm.isConfirmed) return;
 
-      // 1. ล้างในเครื่องทันที
-      localStorage.removeItem('AFT_LOCAL_ORDERS');
+      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); } catch (e) {}
       queueCounter = 1;
-      localStorage.setItem('AFT_QUEUE_NO', '1');
+      safeSet('AFT_QUEUE_NO', '1');
       updateQueueBadge();
       renderHistoryTable();
 
-      // 2. สั่งล้างใน Google Sheets ด้วย (ถ้าเชื่อมไว้)
-      const gasUrl = localStorage.getItem('AFT_GAS_URL') || '';
+      const gasUrl = getGasUrl();
       if (gasUrl) {
         try {
           await fetch(gasUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'CLEAR_ALL_ORDERS',
-              apiKey: localStorage.getItem('AFT_GAS_KEY') || 'AFT-KHAI-POS-2026-SECRET'
-            })
+            body: JSON.stringify({ action: 'CLEAR_ALL_ORDERS', apiKey: getApiKey() })
           });
         } catch (e) {}
       }
-
-      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ล้างประวัติทั้งหมดเป็น 0 เรียบร้อย!', showConfirmButton:false, timer:1800 });
+      Swal.fire({ toast:true, position:'top-end', icon:'success', title:'ล้างประวัติเรียบร้อย!', showConfirmButton:false, timer:1800 });
     }
 
     function renderHistoryTable() {
-      const orders = JSON.parse(localStorage.getItem('AFT_LOCAL_ORDERS') || '[]');
+      const orders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       const kw = (document.getElementById('historySearchInput')?.value || '').trim().toLowerCase();
       const total = orders.reduce((s, o) => s + Number(o.totalAmount), 0);
       const cash = orders.filter(o => o.paymentMethod === 'CASH').reduce((s, o) => s + Number(o.totalAmount), 0);
@@ -1122,7 +1202,7 @@
       const filtered = orders.filter(o => o.orderId.toLowerCase().includes(kw) || o.queueNo.toLowerCase().includes(kw) || JSON.stringify(o.items).toLowerCase().includes(kw));
       const tbody = document.getElementById('historyTableBody');
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่มีข้อมูลประวัติการขาย (ตรงกับฐานข้อมูล Google Sheets)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่มีข้อมูลประวัติการขาย</td></tr>`;
         return;
       }
 
@@ -1133,19 +1213,19 @@
           <td class="p-2">${(o.items || []).map(i => `<div>• <b>${i.name}</b> ${i.toppings?.length ? `(+${i.toppings.join(',')})` : ''} x${i.qty}</div>`).join('')}</td>
           <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${o.paymentMethod === 'QR' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'}">${o.paymentMethod}</span></td>
           <td class="p-2 text-right font-mono font-bold text-maroon-800">฿${o.totalAmount}</td>
-          <td class="p-2 text-center"><button onclick="openReceiptByOrderId('${o.orderId}')" class="bg-maroon-700 text-white px-2.5 py-1 rounded-lg font-bold">ดู/โหลดใบเสร็จ</button></td>
+          <td class="p-2 text-center"><button onclick="openReceiptByOrderId('${o.orderId}')" class="bg-maroon-700 text-white px-2.5 py-1 rounded-lg font-bold whitespace-nowrap">ใบเสร็จ</button></td>
         </tr>
       `).join('');
     }
 
     function openReceiptByOrderId(id) {
-      const orders = JSON.parse(localStorage.getItem('AFT_LOCAL_ORDERS') || '[]');
+      const orders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       const found = orders.find(o => o.orderId === id);
       if (found) openReceiptPreview(found);
     }
 
     function exportHistoryCSV() {
-      const orders = JSON.parse(localStorage.getItem('AFT_LOCAL_ORDERS') || '[]');
+      const orders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       if (!orders.length) return;
       let csv = '\uFEFFเลขบิล,คิว,วันเวลา,แคชเชียร์,รายการอาหาร,วิธีชำระ,ยอดสุทธิ\n';
       orders.forEach(o => {
@@ -1158,10 +1238,10 @@
       a.click();
     }
 
-    // --- Admin Management ---
+    // --- Admin ---
     function openAdminModal() {
       if (currentRole !== 'ADMIN') {
-        Swal.fire({ title:'🔒 รหัส PIN Admin (9999)', input:'password', showCancelButton:true, confirmButtonColor:'#6A0D25' }).then(r => {
+        Swal.fire({ title:'🔒 รหัส PIN Admin', input:'password', inputAttributes:{ inputmode:'numeric' }, showCancelButton:true, confirmButtonColor:'#6A0D25' }).then(r => {
           if (r.isConfirmed && r.value === '9999') {
             currentRole = 'ADMIN'; document.getElementById('roleBadge').textContent = 'ADMIN';
             renderAdminMenuTable(); renderAdminToppingList(); renderQrDisplay(); showModal('adminModal');
@@ -1186,9 +1266,9 @@
           <td class="p-2">${m.cat}</td>
           <td class="p-2 text-center">${m.custom ? '✓' : '-'}</td>
           <td class="p-2 text-right font-mono">฿${m.price}</td>
-          <td class="p-2 text-center space-x-1">
-            <button onclick="editMenuItem(${idx})" class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold">แก้ไข</button>
-            <button onclick="deleteMenuItem(${idx})" class="px-2 py-0.5 bg-rose-100 text-rose-700 rounded font-bold">ลบ</button>
+          <td class="p-2 text-center space-x-1 whitespace-nowrap">
+            <button onclick="editMenuItem(${idx})" class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold">แก้ไข</button>
+            <button onclick="deleteMenuItem(${idx})" class="px-2 py-1 bg-rose-100 text-rose-700 rounded font-bold">ลบ</button>
           </td>
         </tr>
       `).join('');
@@ -1208,7 +1288,7 @@
         custom: document.getElementById('inpMenuCustom').checked
       };
       if (idx > -1) menuItems[idx] = obj; else menuItems.push(obj);
-      localStorage.setItem('AFT_CUSTOM_MENUS', JSON.stringify(menuItems));
+      safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems));
       resetMenuForm(); renderAdminMenuTable(); renderMenuGrid();
     }
 
@@ -1222,16 +1302,16 @@
       document.getElementById('inpMenuBadge').value = m.badge || '';
       document.getElementById('inpMenuCustom').checked = !!m.custom;
     }
-    function deleteMenuItem(idx) { menuItems.splice(idx, 1); localStorage.setItem('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); renderAdminMenuTable(); renderMenuGrid(); }
+    function deleteMenuItem(idx) { menuItems.splice(idx, 1); safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); renderAdminMenuTable(); renderMenuGrid(); }
     function resetMenuForm() { document.getElementById('editMenuIndex').value = '-1'; document.getElementById('inpMenuCode').value = ''; document.getElementById('inpMenuName').value = ''; document.getElementById('inpMenuPrice').value = ''; }
 
     function renderAdminToppingList() {
       document.getElementById('adminToppingList').innerHTML = toppingList.map((t, idx) => `
-        <div class="p-2.5 bg-white border rounded-xl flex justify-between items-center text-xs">
-          <div><b>${t.name}</b> <span class="text-maroon-700 font-mono">+฿${t.price}</span></div>
-          <div class="space-x-1">
-            <button onclick="editToppingItem(${idx})" class="px-2 py-0.5 bg-amber-100 rounded font-bold">แก้</button>
-            <button onclick="deleteToppingItem(${idx})" class="px-2 py-0.5 bg-rose-100 text-rose-700 rounded font-bold">ลบ</button>
+        <div class="p-2.5 bg-white border rounded-xl flex justify-between items-center text-xs gap-1">
+          <div class="min-w-0"><b>${t.name}</b> <span class="text-maroon-700 font-mono">+฿${t.price}</span></div>
+          <div class="space-x-1 shrink-0">
+            <button onclick="editToppingItem(${idx})" class="px-2 py-1 bg-amber-100 rounded font-bold">แก้</button>
+            <button onclick="deleteToppingItem(${idx})" class="px-2 py-1 bg-rose-100 text-rose-700 rounded font-bold">ลบ</button>
           </div>
         </div>
       `).join('');
@@ -1242,13 +1322,13 @@
       const price = Number(document.getElementById('inpToppingPrice').value) || 0;
       if (!name) return;
       if (idx > -1) toppingList[idx] = { name, price }; else toppingList.push({ name, price });
-      localStorage.setItem('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList));
+      safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList));
       resetToppingForm(); renderAdminToppingList();
     }
     function editToppingItem(idx) { document.getElementById('editToppingIndex').value = idx; document.getElementById('inpToppingName').value = toppingList[idx].name; document.getElementById('inpToppingPrice').value = toppingList[idx].price; }
-    function deleteToppingItem(idx) { toppingList.splice(idx, 1); localStorage.setItem('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); renderAdminToppingList(); }
+    function deleteToppingItem(idx) { toppingList.splice(idx, 1); safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); renderAdminToppingList(); }
     function resetToppingForm() { document.getElementById('editToppingIndex').value = '-1'; document.getElementById('inpToppingName').value = ''; document.getElementById('inpToppingPrice').value = ''; }
-    function resetDefaultCatalog() { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); location.reload(); }
+    function resetDefaultCatalog() { try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) {} location.reload(); }
 
     function handleQrFileUpload(ev) {
       const file = ev.target.files[0];
@@ -1263,18 +1343,18 @@
           if (w > h && w > max) { h *= max / w; w = max; } else if (h > max) { w *= max / h; h = max; }
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          localStorage.setItem('AFT_QR_IMAGE', c.toDataURL('image/jpeg', 0.8));
+          safeSet('AFT_QR_IMAGE', c.toDataURL('image/jpeg', 0.8));
           renderQrDisplay(); broadcastCustomerState('ORDERING');
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
-    function saveQrSettings() { localStorage.setItem('AFT_QR_TEXT', document.getElementById('inpQrAccountText').value.trim()); renderQrDisplay(); broadcastCustomerState('ORDERING'); Swal.fire({ toast:true, position:'top-end', icon:'success', title:'บันทึก QR แล้ว', showConfirmButton:false, timer:1200 }); }
-    function clearQrImage() { localStorage.removeItem('AFT_QR_IMAGE'); renderQrDisplay(); broadcastCustomerState('ORDERING'); }
+    function saveQrSettings() { safeSet('AFT_QR_TEXT', document.getElementById('inpQrAccountText').value.trim()); renderQrDisplay(); broadcastCustomerState('ORDERING'); Swal.fire({ toast:true, position:'top-end', icon:'success', title:'บันทึก QR แล้ว', showConfirmButton:false, timer:1200 }); }
+    function clearQrImage() { try { localStorage.removeItem('AFT_QR_IMAGE'); } catch (e) {} renderQrDisplay(); broadcastCustomerState('ORDERING'); }
     function renderQrDisplay() {
-      const img = localStorage.getItem('AFT_QR_IMAGE');
-      const txt = localStorage.getItem('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)';
+      const img = safeGet('AFT_QR_IMAGE');
+      const txt = safeGet('AFT_QR_TEXT') || 'พร้อมเพย์ ร้าน ไข่ (อวท.)';
       document.getElementById('inpQrAccountText').value = txt;
       const html = img ? `<img src="${img}" class="w-full h-full object-contain rounded" />` : `<i class="fa-solid fa-qrcode text-6xl text-maroon-900"></i>`;
       document.getElementById('qrImageContainer').innerHTML = html;
@@ -1283,27 +1363,38 @@
       document.getElementById('adminQrTextPreview').textContent = txt;
     }
 
-    function openConfigModal() { showModal('configModal'); }
+    // --- Config (เชื่อมต่อครั้งเดียว) ---
+    function openConfigModal() {
+      document.getElementById('gasUrlInput').value = getGasUrl();
+      document.getElementById('apiKeyInput').value = getApiKey();
+      showModal('configModal');
+    }
     function updateDbBadge() {
-      const gas = localStorage.getItem('AFT_GAS_URL') || '';
+      const gas = getGasUrl();
       const b = document.getElementById('dbStatusBadge');
       if (!b) return;
       if (gas) {
-        b.textContent = 'เชื่อม Google Sheets แล้ว';
-        b.className = 'cursor-pointer bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] px-2 py-0.5 rounded-full';
+        b.textContent = '● เชื่อม Sheets แล้ว';
+        b.className = 'cursor-pointer bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap';
       } else {
-        b.textContent = 'โหมดในเครื่อง (คลิกตั้งค่า GAS)';
-        b.className = 'cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-2 py-0.5 rounded-full';
+        b.textContent = 'โหมดในเครื่อง (แตะตั้งค่า)';
+        b.className = 'cursor-pointer bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap';
       }
     }
     function loadSavedConfig() {
-      document.getElementById('gasUrlInput').value = localStorage.getItem('AFT_GAS_URL') || '';
-      document.getElementById('apiKeyInput').value = localStorage.getItem('AFT_GAS_KEY') || 'AFT-KHAI-POS-2026-SECRET';
+      document.getElementById('gasUrlInput').value = getGasUrl();
+      document.getElementById('apiKeyInput').value = getApiKey();
       updateDbBadge();
     }
     async function saveConfig() {
-      localStorage.setItem('AFT_GAS_URL', document.getElementById('gasUrlInput').value.trim());
-      localStorage.setItem('AFT_GAS_KEY', document.getElementById('apiKeyInput').value.trim());
+      const url = document.getElementById('gasUrlInput').value.trim();
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (url && !/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) {
+        return Swal.fire({ icon:'warning', title:'ลิงก์ไม่ถูกต้อง', text:'ต้องขึ้นต้นด้วย https://script.google.com/ และลงท้ายด้วย /exec', confirmButtonColor:'#6A0D25' });
+      }
+      safeSet('AFT_GAS_URL', url);
+      safeSet('AFT_GAS_KEY', key || DEFAULT_API_KEY);
+      pinGasToUrl();
       updateDbBadge();
       closeModal('configModal');
       await syncOrdersFromGoogleSheet(false);
