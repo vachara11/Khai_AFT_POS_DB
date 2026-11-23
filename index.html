@@ -1955,7 +1955,12 @@
           if (!r || r.status !== 'success') throw new Error((r && r.message) || 'unsupported');
           Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกเมนูขึ้น Google Sheets แล้ว', showConfirmButton: false, timer: 1200 });
         } catch (e) {
-          Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'บันทึกเมนูขึ้นชีตไม่สำเร็จ (เช็ก Deploy เวอร์ชันใหม่)', showConfirmButton: false, timer: 2500 });
+          const m = String((e && e.message) || e);
+          const why = /Invalid Action/i.test(m) ? 'Apps Script ยังเป็นเวอร์ชันเก่า → วาง Code.gs ใหม่ แล้ว Deploy > Manage deployments > แก้ไข > New version'
+            : /Invalid API Key/i.test(m) ? 'API Key ในหน้าเว็บไม่ตรงกับ SECRET_API_KEY ใน Code.gs'
+            : /Failed to fetch|NetworkError|Load failed/i.test(m) ? 'เรียกลิงก์ /exec ไม่ได้ (เน็ตหลุด / Who has access ต้องเป็น Anyone)'
+            : m;
+          Swal.fire({ icon: 'warning', title: 'บันทึกเมนูขึ้นชีตไม่สำเร็จ', text: why, confirmButtonColor: '#6A0D25' });
         }
       }, 400);
     }
