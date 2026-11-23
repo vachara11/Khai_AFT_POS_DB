@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>POS น้ำแข็งใส ไส่ไม่ยั้ง By อวท. V4.0</title>
+  <title>POS น้ำแข็งใส ไส่ไม่ยั้ง By อวท. V4.2</title>
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
@@ -1214,6 +1214,7 @@
         <option value="DONE" ${st === 'DONE' ? 'selected' : ''}>✅ เสร็จแล้ว</option></select></td>`;
     }
     async function changeOrderStatus(id, status) {
+      recentStatus[id] = { status, ts: Date.now() };
       const map = getKStatusMap(); map[id] = status; saveKStatusMap(map);
       const orders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       orders.forEach(o => { if (o.orderId === id) o.kitchenStatus = status; });
@@ -1611,6 +1612,10 @@
       if (currentPaymentMethod === 'CASH') broadcastCustomerState('PAY_CASH', { cashReceived: cashReceivedAmount, changeAmount: Math.max(0, change) });
     }
 
+    function fmtTs(d) {
+      const p = n => String(n).padStart(2, '0');
+      return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
     async function submitOrderToGAS() {
       const total = getCartTotal();
       if (currentPaymentMethod === 'CASH' && cashReceivedAmount < total) {
@@ -1627,7 +1632,7 @@
         cashReceived: cashReceivedAmount,
         changeAmount: cashReceivedAmount - total,
         items: JSON.parse(JSON.stringify(cart)),
-        timestamp: new Date().toLocaleString('th-TH'),
+        timestamp: fmtTs(new Date()),
         createdAt: Date.now(),
         kitchenStatus: 'PENDING'
       };
@@ -1649,6 +1654,9 @@
           const resJson = await res.json();
           if (resJson && resJson.status === 'success') {
             savedToCloud = true; cloudKitchen = !!resJson.version;
+            if (resJson.queueNo) orderData.queueNo = resJson.queueNo;
+            if (resJson.timestamp) orderData.timestamp = resJson.timestamp;
+            if (resJson.createdAt) orderData.createdAt = resJson.createdAt;
             if (!resJson.version) {
               Swal.fire({
                 icon: 'error', title: 'ออเดอร์ไม่เข้าครัว: Apps Script เป็นโค้ดเก่า',
@@ -1663,6 +1671,7 @@
         }
       }
 
+      if (gasUrl && !savedToCloud) orderData._pending = true;   // รอส่งขึ้นชีตใหม่ภายหลัง
       const localOrders = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
       localOrders.unshift(orderData);
       safeSet('AFT_LOCAL_ORDERS', JSON.stringify(localOrders));
@@ -1677,7 +1686,8 @@
       broadcastCustomerState('PAID', { cashReceived: cashReceivedAmount, changeAmount: orderData.changeAmount });
       closeModal('paymentModal');
       closeCartDrawer();
-      queueCounter++;
+      const qn = parseInt(String(orderData.queueNo).replace(/\D/g, ''), 10);
+      queueCounter = Math.max(queueCounter, (qn || queueCounter) ) + 1;
       safeSet('AFT_QUEUE_NO', String(queueCounter));
       updateQueueBadge();
       cart = []; renderCart(); playBeep(980, 120);
@@ -1749,6 +1759,8 @@
       await syncOrdersFromGoogleSheet(false);
     }
 
+    let syncBusy = false;
+    const recentStatus = {};   // กันสถานะครัวเด้งกลับระหว่างรอ Apps Script บันทึก
     async function syncOrdersFromGoogleSheet(silent = false) {
       const gasUrl = getGasUrl();
       const statusEl = document.getElementById('historySyncStatus');
@@ -1757,24 +1769,49 @@
         renderHistoryTable();
         return;
       }
-
-      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังซิงค์จาก Google Sheets...';
+      if (syncBusy) return;
+      syncBusy = true;
+      if (statusEl && !silent) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังซิงค์จาก Google Sheets...';
       try {
+        // 1) ส่งบิลที่ค้างอยู่ในเครื่อง (บันทึกขึ้นชีตไม่สำเร็จก่อนหน้านี้) — ส่งซ้ำได้ปลอดภัย
+        let local = JSON.parse(safeGet('AFT_LOCAL_ORDERS') || '[]');
+        for (const o of local.filter(x => x._pending).reverse()) {
+          try {
+            const r = await (await fetch(gasUrl, {
+              method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(Object.assign({}, o, { action: 'SAVE_ORDER', apiKey: getApiKey() }))
+            })).json();
+            if (r && r.status === 'success') {
+              if (r.queueNo) o.queueNo = r.queueNo;
+              if (r.timestamp) o.timestamp = r.timestamp;
+              if (r.createdAt) o.createdAt = r.createdAt;
+              delete o._pending;
+            }
+          } catch (e) { break; }
+        }
+        // 2) ดึงข้อมูลจริงจากชีต
         const res = await fetch(`${gasUrl}?action=GET_ORDERS&t=${Date.now()}`);
         const data = await res.json();
         if (data && data.status === 'success' && Array.isArray(data.orders)) {
-          safeSet('AFT_LOCAL_ORDERS', JSON.stringify(data.orders));
-          if (data.orders.length === 0) {
-            queueCounter = 1;
-            safeSet('AFT_QUEUE_NO', '1');
-            updateQueueBadge();
-          }
-          if (statusEl) statusEl.textContent = `✅ ซิงค์ตรงกับ Google Sheets แล้ว (${data.orders.length} บิล)`;
+          const now = Date.now();
+          const cloud = data.orders.map(o => {
+            const ov = recentStatus[o.orderId];
+            if (ov && now - ov.ts < 10000) o.kitchenStatus = ov.status;
+            return o;
+          });
+          const cloudIds = new Set(cloud.map(o => o.orderId));
+          const stillPending = local.filter(o => o._pending && !cloudIds.has(o.orderId));
+          safeSet('AFT_LOCAL_ORDERS', JSON.stringify(stillPending.concat(cloud)));
+          // 3) เลขคิวถัดไปยึดตามชีตเป็นหลัก (บวกบิลที่ยังค้าง)
+          let next = Number(data.nextQueue) || 1;
+          stillPending.forEach(o => { const n = parseInt(String(o.queueNo).replace(/\D/g, ''), 10); if (n >= next) next = n + 1; });
+          if (next !== queueCounter) { queueCounter = next; safeSet('AFT_QUEUE_NO', String(next)); updateQueueBadge(); }
+          if (statusEl) statusEl.textContent = `✅ ซิงค์ตรงกับ Google Sheets แล้ว (${cloud.length} บิล${stillPending.length ? ` + ค้างส่ง ${stillPending.length}` : ''})`;
           if (!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ซิงค์ข้อมูลแล้ว', showConfirmButton: false, timer: 1500 });
         }
       } catch (err) {
         if (statusEl) statusEl.textContent = '⚠️ ดึงข้อมูลจาก Google Sheets ไม่ได้ (เช็กอินเทอร์เน็ต / การ Deploy)';
-      }
+      } finally { syncBusy = false; }
       renderHistoryTable();
     }
 
@@ -1790,7 +1827,7 @@
       });
       if (!confirm.isConfirmed) return;
 
-      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); localStorage.removeItem('AFT_KITCHEN_QUEUE'); } catch (e) { }
+      try { localStorage.removeItem('AFT_LOCAL_ORDERS'); localStorage.removeItem('AFT_KITCHEN_QUEUE'); localStorage.removeItem('AFT_KSTATUS'); } catch (e) { }
       queueCounter = 1;
       safeSet('AFT_QUEUE_NO', '1');
       updateQueueBadge();
