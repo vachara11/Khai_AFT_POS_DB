@@ -979,6 +979,8 @@
       updateHeldBadge();
       renderQrDisplay();
       broadcastCustomerState('ORDERING');
+      loadCatalogFromCloud();
+      try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
       syncOrdersFromGoogleSheet(true);
       // อัปเดตสถานะครัวบนหน้า POS ทุก 10 วินาที (ไม่รีเฟรชตอนเปิดหน้าประวัติอยู่)
       setInterval(() => {
@@ -1938,6 +1940,40 @@
       `).join('');
     }
 
+    // ===== เมนู/ท็อปปิ้ง: เก็บในเครื่อง + ซิงค์ขึ้น Google Sheets (ชีต Config) =====
+    let catalogTimer = null;
+    function pushCatalog(reset = false) {
+      clearTimeout(catalogTimer);
+      catalogTimer = setTimeout(async () => {
+        const gasUrl = getGasUrl(); if (!gasUrl) return;
+        try {
+          const r = await (await fetch(gasUrl, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(reset ? { action: 'SAVE_CONFIG', apiKey: getApiKey(), reset: true }
+              : { action: 'SAVE_CONFIG', apiKey: getApiKey(), menus: menuItems, toppings: toppingList })
+          })).json();
+          if (!r || r.status !== 'success') throw new Error((r && r.message) || 'unsupported');
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกเมนูขึ้น Google Sheets แล้ว', showConfirmButton: false, timer: 1200 });
+        } catch (e) {
+          Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'บันทึกเมนูขึ้นชีตไม่สำเร็จ (เช็ก Deploy เวอร์ชันใหม่)', showConfirmButton: false, timer: 2500 });
+        }
+      }, 400);
+    }
+    async function loadCatalogFromCloud() {
+      const gasUrl = getGasUrl(); if (!gasUrl) return;
+      try {
+        const d = await (await fetch(`${gasUrl}?action=GET_CONFIG&t=${Date.now()}`, { cache: 'no-store' })).json();
+        if (!d || d.status !== 'success') return;
+        if (Array.isArray(d.menus) || Array.isArray(d.toppings)) {
+          if (Array.isArray(d.menus)) { menuItems = d.menus; safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); }
+          if (Array.isArray(d.toppings)) { toppingList = d.toppings; safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); }
+          renderMenuGrid();
+        } else if (safeGet('AFT_CUSTOM_MENUS') || safeGet('AFT_CUSTOM_TOPPINGS')) {
+          pushCatalog();   // ชีตยังว่าง แต่เครื่องนี้มีเมนูที่แก้ไว้ → อัปโหลดขึ้นชีตครั้งแรก
+        }
+      } catch (e) { }
+    }
+
     function saveMenuItem() {
       const idx = parseInt(document.getElementById('editMenuIndex').value, 10);
       const name = document.getElementById('inpMenuName').value.trim();
@@ -1952,7 +1988,7 @@
         custom: document.getElementById('inpMenuCustom').checked
       };
       if (idx > -1) menuItems[idx] = obj; else menuItems.push(obj);
-      safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems));
+      safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); pushCatalog();
       resetMenuForm(); renderAdminMenuTable(); renderMenuGrid();
     }
 
@@ -1966,7 +2002,7 @@
       document.getElementById('inpMenuBadge').value = m.badge || '';
       document.getElementById('inpMenuCustom').checked = !!m.custom;
     }
-    function deleteMenuItem(idx) { menuItems.splice(idx, 1); safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); renderAdminMenuTable(); renderMenuGrid(); }
+    function deleteMenuItem(idx) { menuItems.splice(idx, 1); safeSet('AFT_CUSTOM_MENUS', JSON.stringify(menuItems)); pushCatalog(); renderAdminMenuTable(); renderMenuGrid(); }
     function resetMenuForm() { document.getElementById('editMenuIndex').value = '-1'; document.getElementById('inpMenuCode').value = ''; document.getElementById('inpMenuName').value = ''; document.getElementById('inpMenuPrice').value = ''; }
 
     function renderAdminToppingList() {
@@ -1986,13 +2022,18 @@
       const price = Number(document.getElementById('inpToppingPrice').value) || 0;
       if (!name) return;
       if (idx > -1) toppingList[idx] = { name, price }; else toppingList.push({ name, price });
-      safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList));
+      safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); pushCatalog();
       resetToppingForm(); renderAdminToppingList();
     }
     function editToppingItem(idx) { document.getElementById('editToppingIndex').value = idx; document.getElementById('inpToppingName').value = toppingList[idx].name; document.getElementById('inpToppingPrice').value = toppingList[idx].price; }
-    function deleteToppingItem(idx) { toppingList.splice(idx, 1); safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); renderAdminToppingList(); }
+    function deleteToppingItem(idx) { toppingList.splice(idx, 1); safeSet('AFT_CUSTOM_TOPPINGS', JSON.stringify(toppingList)); pushCatalog(); renderAdminToppingList(); }
     function resetToppingForm() { document.getElementById('editToppingIndex').value = '-1'; document.getElementById('inpToppingName').value = ''; document.getElementById('inpToppingPrice').value = ''; }
-    function resetDefaultCatalog() { try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) { } location.reload(); }
+    async function resetDefaultCatalog() {
+      try { localStorage.removeItem('AFT_CUSTOM_MENUS'); localStorage.removeItem('AFT_CUSTOM_TOPPINGS'); } catch (e) { }
+      const gasUrl = getGasUrl();
+      if (gasUrl) { try { await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'SAVE_CONFIG', apiKey: getApiKey(), reset: true }) }); } catch (e) { } }
+      location.reload();
+    }
 
     function handleQrFileUpload(ev) {
       const file = ev.target.files[0];
